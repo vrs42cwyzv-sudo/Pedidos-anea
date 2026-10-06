@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="only light">
+<title>Pedidos Anea</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Yellowtail&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f5f0e8;--pink:#e3c6cb;--pink-d:#d2a5ae;--rose:#b47a87;--ink:#3d2a2f;--muted:#7a6469;color-scheme:only light}
+*{box-sizing:border-box}html{background:var(--cream)}
+body{margin:0;font-family:Montserrat,system-ui,sans-serif;color:var(--ink);background:var(--cream);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;background:var(--pink);color:var(--ink);font-weight:700;padding:12px 22px}
+#login{max-width:360px;margin:12vh auto;padding:0 20px;text-align:center}
+h1{font-family:Yellowtail,cursive;font-weight:400;font-size:4.5rem;margin:0;color:var(--rose);line-height:1}
+label{display:block;text-align:left;font-weight:700;margin-top:14px}
+input{width:100%;font:inherit;padding:12px;border:1.5px solid var(--pink-d);border-radius:10px;margin-top:4px}
+#lerr{color:#a3262d;min-height:1.2em}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;flex-wrap:wrap;position:sticky;top:0;background:var(--cream);z-index:2;border-bottom:2px solid var(--pink-d)}
+header b{font-family:Yellowtail,cursive;font-weight:400;font-size:2.2rem;color:var(--rose)}
+header nav{margin-left:auto;display:flex;gap:8px}
+nav button{background:none;border:1.5px solid var(--pink-d)}nav button.on{background:var(--pink)}
+#snd{display:block;width:calc(100% - 40px);margin:14px 20px 0;background:var(--rose);color:#fff}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;padding:18px 20px 40px}
+.card{background:#fff;border-radius:14px;padding:16px;border-left:8px solid var(--pink-d)}
+.card.nuevo{border-color:#d9534f;box-shadow:0 0 0 2px #d9534f33}.card.preparando{border-color:#e0a63c}.card.listo{border-color:#5fa86a}.card.entregado{border-color:#bbb;opacity:.7}
+.hd{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.hd b{font-size:1.25rem}.hd span{color:var(--muted);text-align:right}
+.it{padding:3px 0}.nt{margin-top:8px;font-style:italic;color:var(--muted)}
+.ft{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.ft b{font-size:1.2rem}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted)}
+</style></head><body>
+<section id="login"><h1>Anea</h1><p>Pedidos</p>
+<label>Correo<input id="em" type="email" autocomplete="username"></label>
+<label>Contraseña<input id="pw" type="password" autocomplete="current-password"></label>
+<p id="lerr" role="alert"></p><button id="in">Entrar</button></section>
+<section id="app" hidden>
+<header><b>Pedidos</b><span id="cnt"></span><nav><button id="tA" class="on">Activos</button><button id="tD">Entregados</button><button id="out">Salir</button></nav></header>
+<button id="snd">🔔 Toca aquí para activar el sonido</button>
+<div id="list"></div></section>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,query,orderBy,limit,onSnapshot,doc,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}),auth=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s);
+let tab="A",orders=[],first=true,unsub=null,ctx=null;
+function audio(){ctx=ctx||new(window.AudioContext||window.webkitAudioContext)();return ctx.resume()}
+function beep(){if(!ctx)return;[0,.3,.6].forEach(d=>{const t=ctx.currentTime+d,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;o.connect(g);g.connect(ctx.destination);g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.start(t);o.stop(t+.25)})}
+async function awake(){try{await navigator.wakeLock.request("screen")}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&auth.currentUser)awake()});
+const NX={nuevo:["preparando","Preparando"],preparando:["listo","Listo"],listo:["entregado","Entregado"]};
+function render(){
+  const act=orders.filter(o=>o.status!=="entregado").reverse(),done=orders.filter(o=>o.status==="entregado");
+  $("#cnt").textContent=act.length?`${act.length} por atender`:"";
+  const arr=tab==="A"?act:done,L=$("#list");L.innerHTML="";
+  if(!arr.length){const p=document.createElement("p");p.className="empty";p.textContent="Sin pedidos";L.append(p);return}
+  arr.forEach(o=>{
+    const c=document.createElement("article");c.className="card "+o.status;
+    const hr=o.createdAt&&o.createdAt.toDate?o.createdAt.toDate().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"}):"";
+    const h=document.createElement("div");h.className="hd";
+    const n=document.createElement("b");n.textContent=o.name;
+    const s=document.createElement("span");s.textContent=`${hr} · ${o.dest}`;
+    h.append(n,s);c.append(h);
+    (o.items||[]).forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"");c.append(d)});
+    if(o.note){const d=document.createElement("div");d.className="nt";d.textContent="Indicaciones: "+o.note;c.append(d)}
+    const f=document.createElement("div");f.className="ft";
+    const t=document.createElement("b");t.textContent="$"+o.total;f.append(t);
+    const nx=NX[o.status];
+    if(nx){const b=document.createElement("button");b.textContent=nx[1];b.onclick=()=>updateDoc(doc(db,"orders",o.id),{status:nx[0]});f.append(b)}
+    c.append(f);L.append(c);
+  });
+}
+function start(){
+  first=true;
+  unsub=onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(100)),s=>{
+    if(!first&&s.docChanges().some(c=>c.type==="added"))beep();
+    first=false;orders=s.docs.map(d=>({id:d.id,...d.data()}));render();
+  },e=>{$("#list").textContent="No se pudieron leer los pedidos ("+e.code+")"});
+}
+onAuthStateChanged(auth,u=>{
+  $("#login").hidden=!!u;$("#app").hidden=!u;
+  if(u){start();awake();$("#snd").hidden=!!ctx&&ctx.state==="running"}
+  else{if(unsub)unsub();unsub=null;orders=[]}
+});
+$("#in").onclick=async()=>{
+  $("#lerr").textContent="";audio();
+  try{await signInWithEmailAndPassword(auth,$("#em").value.trim(),$("#pw").value)}catch(e){$("#lerr").textContent="Correo o contraseña incorrectos."}
+};
+$("#snd").onclick=async()=>{await audio();$("#snd").hidden=true;beep()};
+$("#out").onclick=()=>signOut(auth);
+$("#tA").onclick=()=>{tab="A";$("#tA").className="on";$("#tD").className="";render()};
+$("#tD").onclick=()=>{tab="D";$("#tD").className="on";$("#tA").className="";render()};
+</script></body></html>
