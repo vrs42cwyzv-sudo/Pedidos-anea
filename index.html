@@ -71,6 +71,8 @@ a.go[hidden]{display:none}
     <div id="addrw" hidden><label class="f" for="addr">Dirección de tu casa</label><textarea id="addr" rows="2" autocomplete="street-address"></textarea></div>
     <label class="f" for="name">Nombre para el pedido</label>
     <input class="tx" id="name" autocomplete="given-name" maxlength="40">
+    <label class="f" for="phone">Teléfono de contacto</label>
+    <input class="tx" id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="10 dígitos">
     <label class="f" for="note">Indicaciones (opcional)</label>
     <textarea id="note" rows="2" placeholder="Poca azúcar, sin hielo…"></textarea>
     <p class="err" id="err" role="alert"></p>
@@ -175,15 +177,16 @@ $("#deliv").onchange=()=>{$("#addrw").hidden=val("e")!=="Otros"};
 $("#open").onclick=()=>{if(!units()){$("#menu").scrollIntoView({behavior:"smooth"});return}$("#review").hidden=false;$("#done").hidden=true;$("#err").textContent="";lines($("#lines"),1);$("#dlg").showModal()};
 $("#back").onclick=()=>$("#dlg").close();
 $("#send").onclick=async()=>{
-  const name=$("#name").value.trim(),e=val("e"),ad=$("#addr").value.trim(),note=$("#note").value.trim(),err=m=>$("#err").textContent=m;
+  const name=$("#name").value.trim(),ph=$("#phone").value.trim(),e=val("e"),ad=$("#addr").value.trim(),note=$("#note").value.trim(),err=m=>$("#err").textContent=m;
   if(!name){err("Escribe tu nombre para poder llamarte cuando esté listo.");$("#name").focus();return}
+  if(ph.replace(/\D/g,"").length<10){err("Escribe tu teléfono a 10 dígitos para poder contactarte.");$("#phone").focus();return}
   if(e==="Otros"&&!ad){err("Escribe la dirección de tu casa.");$("#addr").focus();return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
-  const order={name,dest,note,total:total(),items:cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p}))};
+  const order={name,phone:ph,dest,note,total:total(),items:cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p}))};
   let t=`Hola, soy ${name}. Quiero pedir:\n`;
   cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${money(x.p*x.q)}\n`);
-  t+=`Total: ${money(total())}\nEntrega: ${dest}`;
+  t+=`Total: ${money(total())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
   if(note)t+=`\nIndicaciones: ${note}`;
   let ok=false;
   try{ok=await Promise.race([window.saveOrder(order),new Promise((_,r)=>setTimeout(r,12000))])}catch(x){ok=false}
@@ -199,7 +202,7 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getFirestore,collection,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const db=getFirestore(initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}));
-window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp()});return true};
+window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp()});return true};
 </script>
 </body>
 </html>

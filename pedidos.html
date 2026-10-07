@@ -26,6 +26,7 @@ nav button{background:none;border:1.5px solid var(--pink-d)}nav button.on{backgr
 .hd{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.hd b{font-size:1.25rem}.hd span{color:var(--muted);text-align:right}
 .it{padding:3px 0}.nt{margin-top:8px;font-style:italic;color:var(--muted)}
 .ft{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.ft b{font-size:1.2rem}
+a.nt{display:block;color:var(--rose);font-style:normal;font-weight:700;text-decoration:none}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted)}
 </style></head><body>
 <section id="login"><h1>Anea</h1><p>Pedidos</p>
@@ -60,6 +61,7 @@ function render(){
     const s=document.createElement("span");s.textContent=`${hr} · ${o.dest}`;
     h.append(n,s);c.append(h);
     (o.items||[]).forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"");c.append(d)});
+    if(o.phone){const a=document.createElement("a");a.className="nt";a.href="tel:"+o.phone.replace(/[^\d+]/g,"");a.textContent="📞 "+o.phone;c.append(a)}
     if(o.note){const d=document.createElement("div");d.className="nt";d.textContent="Indicaciones: "+o.note;c.append(d)}
     const f=document.createElement("div");f.className="ft";
     const t=document.createElement("b");t.textContent="$"+o.total;f.append(t);
