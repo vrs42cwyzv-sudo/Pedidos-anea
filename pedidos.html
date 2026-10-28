@@ -204,7 +204,7 @@ function renderTable(L,list){
   const tot=list.reduce((s,o)=>s+(o.total||0),0),f=document.createElement("tr");f.className="tot";
   const ct=sumCups(list);f.append(td("Total"),td(list.length,"n"),td(money(tot),"n"),td(ct[0],"n"),td(ct[1],"n"));t.append(f);w.append(t);
 }
-const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Pistache","Lotus","Vainilla"];
+const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Lotus","Vainilla"];
 const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
@@ -312,9 +312,9 @@ function renderCorte(L,list){
   cp.onclick=async()=>{const txt=lines.join("\n");try{await navigator.clipboard.writeText(txt);cp.textContent="¡Copiado!"}catch(e){prompt("Copia el corte:",txt)}};
   L.append(cp);
 }
-function renderTienda(L,list){
-  const [v,l]=sumCups(list),tot=list.reduce((s,o)=>s+(o.total||0),0),p=box("Tienda · hoy"),b=document.createElement("button");
-  p.append(row("Ventas",money(tot)),row("Ventas registradas",list.length),row("Vasos",v),row("Latas",l));L.append(p);
+function renderTienda(L,list,all){
+  const [v,l]=sumCups(list),tot=list.reduce((s,o)=>s+(o.total||0),0),p=box("Ventas de mostrador · hoy"),b=document.createElement("button");
+  p.append(row("Ventas de mostrador",money(tot)),row("Ventas registradas",list.length),row("Vasos",v),row("Latas",l),row("Total del día (mostrador + en línea)",money((all||list).reduce((s,o)=>s+(o.total||0),0))));L.append(p);
   b.className="csv";b.textContent="+ Nueva venta de tienda";b.onclick=openSale;L.append(b);
   list.slice().sort((a,b)=>ms(b)-ms(a)).forEach(o=>L.append(card(o)));
   if(!list.length){const e=document.createElement("p");e.className="empty";e.textContent="Aún no hay ventas de tienda hoy";L.append(e)}
@@ -326,7 +326,7 @@ function render(){
   $("#rol").textContent=owner?"Patrón":"Empleado";
   $("#tH").hidden=!owner;$("#tS").hidden=!owner;
   const L=$("#list");L.innerHTML="";
-  if(tab==="T"){renderTienda(L,hoy.filter(o=>o.origen==="tienda"));return}
+  if(tab==="T"){renderTienda(L,hoy.filter(o=>o.origen==="tienda"),hoy);return}
   if(tab==="C"){renderCorte(L,hoy);return}
   if(tab==="S"&&owner){renderStock(L);return}
   if(tab==="H"&&owner){const per_=orders.filter(inPer);renderStats(L,per_);if(per==="1")renderCorte(L,per_);renderTable(L,per_);return}
