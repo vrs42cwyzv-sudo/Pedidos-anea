@@ -24,6 +24,10 @@ h2{font-size:1.05rem;font-weight:700;margin:28px 0 4px;padding-bottom:6px;border
 button{font:inherit;cursor:pointer}
 .pk,.go{background:var(--pink-d);color:var(--ink);border:0;border-radius:999px;font-weight:700;padding:10px 20px}
 .pk:active,.go:active{background:var(--pink-d)}
+.go:disabled{opacity:.55}
+.item.tmp{background:rgba(244,160,80,.20);border-left:5px solid #e8883a;border-radius:10px;padding-left:12px;margin-top:6px;border-bottom:0}
+.item.tmp .pk{background:#f4a560}.item.tmp .pk:active{background:#e8883a}
+h2.tm{border-bottom-color:#e8883a;color:#a8480f}
 .go{display:block;width:100%;padding:14px;margin-top:18px;text-align:center;text-decoration:none;font-size:1rem}
 .link{background:none;border:0;color:var(--muted);width:100%;padding:12px 0 0;text-decoration:underline}
 :focus-visible{outline:3px solid var(--rose);outline-offset:2px}
@@ -89,18 +93,24 @@ a.go[hidden]{display:none}
 </dialog>
 
 <script>
-const $=s=>document.querySelector(s),money=n=>"$"+n,WA="523412082668",B=70,FOAM=10,CAN=5;
+const $=s=>document.querySelector(s),money=n=>"$"+n,WA="523412082668",B=70,FOAM=10,CAN=5,ENVIO=40,envio=()=>val("e")==="CBTis"?0:ENVIO;
 const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Pistache","Lotus","Vainilla"];
+const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
+const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
 const MENU=[
+{c:"De temporada",o:1,i:[
+ {n:"Boo-tus",d:"Bebida de temporada",z:F,f:1,t:1},
+ {n:"Pan de muerto",d:"Bebida de temporada",z:F,f:1,pm:1,t:1},
+ {n:"Pumpkin spice",d:"Bebida de temporada · incluye cloud foam de pumpkin",z:M2,f:1,fi:"Pumpkin Spice"},
+ {n:"Matcha pumpkin spice",d:"Bebida de temporada · con cloud foam de pumpkin",z:M2}]},
 {c:"Frías a las rocas",i:[
  {n:"Americano",z:[["16 oz",55],["Lata",70]],x:1,f:1,s:1},
  {n:"Latte",z:[["16 oz",65],["Lata",75]],v:["Clásico","Avellana","Caramelo"],f:1,s:1},
  {n:"Chai latte",z:[["16 oz",65],["Lata",75]],f:1},
  {n:"Taro",z:[["16 oz",65],["Lata",75]],f:1}]},
 {c:"Frapeadas",i:[
- {n:"Moka",z:F,f:1,s:1},{n:"Chocolate Anea",z:F,f:1},{n:"Oreo",z:F,f:1},
- {n:"Pumpkin spice",d:"De temporada",z:F,f:1},{n:"Pan de muerto",d:"Bebida de temporada",z:F,f:1,pm:1}]},
+ {n:"Moka",z:F,f:1,s:1},{n:"Chocolate Anea",z:F,f:1},{n:"Oreo",z:F,f:1}]},
 {c:"Calientes",i:[
  {n:"Americano",h:1,x:1,s:1,z:[["12 oz",45],["16 oz",55]]},
  {n:"Chocolate mexicano",h:1,z:C},
@@ -109,21 +119,22 @@ const MENU=[
 {c:"Matchas",i:[
  {n:"Matcha clásico",z:[["16 oz",65],["Lata",75]],f:1},
  {n:"Matcha coco",d:"Con cloud foam de coco",z:M2},
- {n:"Matcha Dubai",d:"Con cloud foam de pistache",z:M2},
- {n:"Matcha pumpkin spice",d:"De temporada · con cloud foam de pumpkin",z:M2}]},
-{c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:20,x:1}]}
+ {n:"Matcha Dubai",d:"Con cloud foam de pistache",z:M2}]},
+{c:"Helado suave",i:[{n:"Helado suave",d:"Natural, frutos rojos o combinado",v:["Natural","Frutos rojos","Combinado"],z:FS,zl:"Toppings",tp:TP,x:1}]},
+{c:"Snacks",i:[{n:"Deli delicia",p:35,x:1}]},
+{c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:30,x:1}]}
 ];
 MENU.forEach(g=>g.i.forEach(it=>{const m=Math.min(...(it.z?it.z.map(z=>z[1]):[it.p]));it.d=(it.d?it.d+" · ":"")+(it.z?"desde ":"")+money(m)}));
 let cart=[],cur=null;
 const grp=(t,k,o)=>`<fieldset><legend>${t}</legend>${o.map(([v,l,p],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i?"":" checked"}><span>${l}${p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`;
 const val=k=>{const e=$(`input[name=${k}]:checked`);return e?e.value:""};
-const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")?10:0)+(val("s")?10:0)+(val("pm")?20:0);
+const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")&&!cur.fi?10:0)+(val("s")?10:0)+(val("pm")?30:0);
 const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0),units=()=>cart.reduce((s,x)=>s+x.q,0);
 
 MENU.forEach(g=>{
-  $("#menu").insertAdjacentHTML("beforeend",`<h2>${g.c}</h2>`);
+  $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm"':""}>${g.c}</h2>`);
   g.i.forEach(it=>{
-    const r=document.createElement("div");r.className="item";
+    const r=document.createElement("div");r.className="item"+(it.t?" tmp":"");
     r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
     r.querySelector("button").onclick=()=>openCfg(it);
     $("#menu").append(r);
@@ -133,21 +144,30 @@ MENU.forEach(g=>{
 function openCfg(it){
   cur=it;let h=`<h3>${it.n}${it.h?" caliente":""}</h3>`;
   if(it.v)h+=grp("Sabor","v",it.v.map(v=>[v,v,0]));
-  if(it.z)h+=grp("Tamaño","z",it.z.map(([l,p])=>[l,`${l} · ${money(p)}`,0]));
-  if(it.f)h+=grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10])]);
-  if(!it.x)h+=grp("Leche","l",[["Entera","Entera",0],["Deslactosada","Deslactosada",0],["Avena","Avena",0]]);
+  if(it.z)h+=grp(it.zl||"Tamaño","z",it.z.map(([l,p])=>[l,`${l} · ${money(p)}`,0]));
+  if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10])]);
+  if(!it.x)h+=grp("Leche","l",[["Entera","Entera",0],["Deslactosada","Deslactosada",0]]);
   if(it.s)h+=grp("Shot de espresso","s",[["","Sin shot",0],["Shot","Con shot",10]]);
-  if(it.pm)h+=grp("Pan de muerto","pm",[["","Sin pan de muerto",0],["Pan","Agregar pan de muerto",20]]);
+  if(it.pm)h+=grp("Pan de muerto","pm",[["","Sin pan de muerto",0],["Pan","Agregar pan de muerto",30]]);
+  if(it.tp)h+=`<fieldset id="tpf"><legend id="tpl"></legend>${it.tp.map(t=>`<label class="chip"><input type="checkbox" name="tp" value="${t}"><span>${t}</span></label>`).join("")}</fieldset>`;
   h+=`<button class="go" id="add"></button><button class="link" id="cx">Cancelar</button>`;
   $("#cfgb").innerHTML=h;
-  const up=()=>$("#add").textContent=`Agregar · ${money(price())}`;
+  const nTp=()=>{if(!it.tp)return 0;const z=it.z.find(x=>x[0]===val("z"));return z&&z[2]||0};
+  const pk=()=>[...document.querySelectorAll("#cfgb input[name=tp]:checked")];
+  const up=ev=>{const n=nTp(),f=$("#tpf");
+    if(f){f.hidden=!n;if(!n)pk().forEach(e=>e.checked=false);
+      if(ev&&ev.target&&ev.target.name==="tp"&&pk().length>n)ev.target.checked=false;
+      $("#tpl").textContent=`Elige ${n} toppings (${pk().length}/${n})`}
+    const ok=!n||pk().length===n;$("#add").disabled=!ok;
+    $("#add").textContent=ok?`Agregar · ${money(price())}`:`Elige ${n} toppings`};
   $("#cfgb").onchange=up;up();
   $("#add").onclick=()=>{addItem();$("#cfg").close()};
   $("#cx").onclick=()=>$("#cfg").close();
   $("#cfg").showModal();
 }
 function addItem(){
-  const parts=[val("z"),val("f")&&`cloud foam de ${val("f")}`,val("s")&&"shot de espresso",val("pm")&&"con pan de muerto",val("l")&&`leche ${val("l").toLowerCase()}`].filter(Boolean);
+  const tp=[...document.querySelectorAll("#cfgb input[name=tp]:checked")].map(e=>e.value);
+  const parts=[val("z"),tp.length&&"toppings: "+tp.join(", "),val("f")&&`cloud foam de ${val("f")}`,val("s")&&"shot de espresso",val("pm")&&"con pan de muerto",val("l")&&`leche ${val("l").toLowerCase()}`].filter(Boolean);
   const name=cur.n+(cur.h?" caliente":"")+(val("v")?` ${val("v")}`:"");
   const key=name+"|"+parts.join(",");
   const ex=cart.find(x=>x.key===key);
@@ -171,10 +191,10 @@ function lines(el,edit){
       p.onclick=()=>{x.q++;upd();lines(el,1)};}
     el.append(d);
   });
-  el.insertAdjacentHTML("beforeend",`<div class="tot"><span>Total</span><span>${money(total())}</span></div>`);
+  el.insertAdjacentHTML("beforeend",(envio()?`<div class="ln"><div class="t"><b>Costo de envío</b></div><span>${money(envio())}</span></div>`:"")+`<div class="tot"><span>Total</span><span>${money(total()+envio())}</span></div>`);
 }
 $("#deliv").innerHTML=grp("¿Dónde te lo entregamos?","e",[["CBTis","CBTis",0],["Prepa","Prepa",0],["Otros","Otros",0]]);
-$("#deliv").onchange=()=>{$("#addrw").hidden=val("e")!=="Otros"};
+$("#deliv").onchange=()=>{$("#addrw").hidden=val("e")!=="Otros";lines($("#lines"),1)};
 $("#open").onclick=()=>{if(!units()){$("#menu").scrollIntoView({behavior:"smooth"});return}$("#review").hidden=false;$("#done").hidden=true;$("#err").textContent="";lines($("#lines"),1);$("#dlg").showModal()};
 $("#back").onclick=()=>$("#dlg").close();
 $("#send").onclick=async()=>{
@@ -184,10 +204,10 @@ $("#send").onclick=async()=>{
   if(e==="Otros"&&!ad){err("Escribe la dirección de tu casa.");$("#addr").focus();return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
-  const order={name,phone:ph,day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total(),items:cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p}))};
+  const order={name,phone:ph,day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
   let t=`Hola, soy ${name}. Quiero pedir:\n`;
   cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${money(x.p*x.q)}\n`);
-  t+=`Total: ${money(total())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
+  t+=(envio()?`Costo de envío: ${money(envio())}\n`:"")+`Total: ${money(total()+envio())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
   if(note)t+=`\nIndicaciones: ${note}`;
   let ok=false;
   try{ok=await Promise.race([window.saveOrder(order),new Promise((_,r)=>setTimeout(r,12000))])}catch(x){ok=false}
