@@ -20,7 +20,9 @@ header b{font-family:Yellowtail,cursive;font-weight:400;font-size:2.2rem;color:v
 header nav{margin-left:auto;display:flex;gap:8px}
 nav button{background:none;border:1.5px solid var(--pink-d)}nav button.on{background:var(--pink)}
 #snd{display:block;width:calc(100% - 40px);margin:14px 20px 0;background:var(--rose);color:#fff}
-#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;padding:18px 20px 40px}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;padding:18px 20px 110px}
+#fabT{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--rose);color:#fff;border:2px solid #fff;border-radius:999px;padding:15px 30px;font-size:1.05rem;white-space:nowrap;box-shadow:0 6px 18px rgba(61,42,47,.3)}
+#fabT:active{background:#9c6572}
 .card{background:#fff;border-radius:14px;padding:16px;border-left:8px solid var(--pink-d)}
 .card.nuevo{border-color:#d9534f;box-shadow:0 0 0 2px #d9534f33}.card.preparando{border-color:#e0a63c}.card.listo{border-color:#5fa86a}.card.entregado{border-color:#bbb;opacity:.7}
 .hd{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.hd b{font-size:1.25rem}.hd span{color:var(--muted);text-align:right}
@@ -48,6 +50,7 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(92vw,520px);max-height
 select{width:100%;font:inherit;padding:11px;border:1.5px solid var(--pink-d);border-radius:10px;margin-top:4px;background:#fff}
 .go{width:100%;margin-top:12px;padding:14px}.rw button{padding:4px 10px;margin-left:8px}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted)}
+.sw{padding:7px 16px;font-size:.85rem;background:#cfe8d3;color:#1f5a2b;min-width:110px}.sw.off{background:#f1c9c9;color:#8a1f26}
 button.del{background:none;border:1.5px solid #d9534f;color:#a3262d;padding:6px 14px;font-size:.85rem;margin-top:10px}
 @media (max-width:700px){
 body{font-size:15px}
@@ -55,7 +58,7 @@ header{padding:10px 12px;gap:6px 10px}header b{font-size:1.9rem}
 header nav{margin-left:0;width:100%;flex-wrap:wrap}
 nav button{white-space:nowrap;padding:8px 13px;font-size:.88rem}
 #snd{width:calc(100% - 24px);margin:10px 12px 0}
-#list{grid-template-columns:1fr;padding:12px 12px 32px;gap:10px}
+#list{grid-template-columns:1fr;padding:12px 12px 100px;gap:10px}
 .card{padding:13px}.hd b{font-size:1.1rem}
 .chips button{padding:8px 14px;font-size:.88rem}
 .panel{padding:12px}
@@ -73,17 +76,28 @@ a.wa{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:999px;
 <label>Contraseña<input id="pw" type="password" autocomplete="current-password"></label>
 <p id="lerr" role="alert"></p><button id="in">Entrar</button></section>
 <section id="app" hidden>
-<header><b>Pedidos</b><span id="rol"></span><span id="cnt"></span><nav><button id="tA" class="on">Activos</button><button id="tD">Entregados</button><button id="tT">Tienda</button><button id="tC">Corte</button><button id="tH" hidden>Historial</button><button id="tS" hidden>Stock</button><button id="out">Salir</button></nav></header>
+<header><b>Pedidos</b><span id="rol"></span><span id="cnt"></span><nav><button id="tA" class="on">Activos</button><button id="tD">Entregados</button><button id="tT">Tienda</button><button id="tC">Corte</button><button id="tM">Agotados</button><button id="tH" hidden>Historial</button><button id="tS" hidden>Stock</button><button id="out">Salir</button></nav></header>
 <button id="snd">🔔 Toca aquí para activar el sonido</button>
-<div id="list"></div></section>
+<div id="list"></div>
+<button id="fabT">＋ Venta en tienda</button></section>
 <dialog id="tienda"><div id="tbody"></div></dialog>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,query,where,orderBy,limit,onSnapshot,doc,updateDoc,addDoc,deleteDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,query,where,orderBy,limit,onSnapshot,doc,updateDoc,addDoc,deleteDoc,setDoc,arrayUnion,arrayRemove,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}),auth=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s);
 const OWNER="warrior101204@gmail.com";
-let tab="A",orders=[],first=true,unsub=null,ctx=null,owner=false,qDay="",stock=[],unsubS=null;
+let tab="A",orders=[],first=true,unsub=null,ctx=null,owner=false,qDay="",stock=[],unsubS=null,off=new Set(),unsubO=null,cajaFondo=null,unsubC=null,unsub2=null,partA=[],partB=[],f2=true;
+const delivDay=o=>o.deliveredAt&&o.deliveredAt.toMillis?mx(o.deliveredAt.toMillis()):dayOf(o);
+const dayLabel=d=>d===today()?"Hoy":d===mx(Date.now()-864e5)?"Ayer":new Date(d+"T12:00:00").toLocaleDateString("es-MX",{weekday:"short",day:"numeric",month:"short"});
+function segCards(L,arr,oldestFirst,suf){
+  const g={};arr.forEach(o=>{(g[dayOf(o)]=g[dayOf(o)]||[]).push(o)});
+  const ks=Object.keys(g).sort();if(!oldestFirst)ks.reverse();
+  const multi=ks.length>1||ks[0]!==today();
+  ks.forEach(d=>{if(multi){const h=document.createElement("h2");h.className="dayh";h.textContent=`${dayLabel(d)} · ${g[d].length} ${g[d].length===1?"pedido":"pedidos"}${suf||""}`;L.append(h)}g[d].forEach(o=>L.append(card(o)))});
+}
+const typing=()=>document.activeElement&&document.activeElement.tagName==="INPUT";
+const setOffKey=(k,v)=>setDoc(doc(db,"config","agotados"),{off:v?arrayUnion(k):arrayRemove(k),updatedAt:serverTimestamp()},{merge:true}).catch(()=>alert("No se pudo guardar. Revisa tu internet e intenta de nuevo."));
 const mx=m=>new Date(m-216e5).toISOString().slice(0,10),today=()=>mx(Date.now());
 const ms=o=>o.createdAt&&o.createdAt.toMillis?o.createdAt.toMillis():Date.now();
 const dayOf=o=>o.day||mx(ms(o));
@@ -114,7 +128,7 @@ function card(o){
   const f=document.createElement("div");f.className="ft";
   const t=document.createElement("b");t.textContent="$"+o.total;f.append(t);
   const nx=NX[o.status];
-  if(nx){const b=document.createElement("button");b.textContent=nx[1];b.onclick=()=>updateDoc(doc(db,"orders",o.id),{status:nx[0]});f.append(b)}
+  if(nx){const b=document.createElement("button");b.textContent=nx[1];b.onclick=()=>updateDoc(doc(db,"orders",o.id),nx[0]==="entregado"?{status:"entregado",deliveredAt:serverTimestamp()}:{status:nx[0]});f.append(b)}
   c.append(f);if(owner)c.append(delBtn(o));return c;
 }
 
@@ -240,12 +254,13 @@ const cups=o=>{let v=0,l=0;(o.items||[]).forEach(i=>{const t=i.opt||"";if(/lata/
 const sumCups=list=>list.reduce((s,o)=>{const c=cups(o);return [s[0]+c[0],s[1]+c[1]]},[0,0]);
 const saleSave=o=>addDoc(collection(db,"orders"),{...o,day:today(),createdAt:serverTimestamp()});
 let tcart=[];
-function sel(label,opts,on){const l=document.createElement("label");l.className="f";l.textContent=label;const s=document.createElement("select");opts.forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;s.append(o)});if(on)s.onchange=on;l.append(s);return [l,s]}
+function sel(label,opts,on){const l=document.createElement("label");l.className="f";l.textContent=label;const s=document.createElement("select");opts.forEach(([v,t,d])=>{const o=document.createElement("option");o.value=v;o.textContent=t;if(d)o.disabled=true;s.append(o)});if(on)s.onchange=on;l.append(s);return [l,s]}
 function openSale(){
   const b=$("#tbody");b.innerHTML="";
   const h=document.createElement("h3");h.textContent="Nueva venta de tienda";
-  const items=[];CARTA.forEach(g=>g.i.forEach(x=>items.push(x)));
-  const sc=sel("Producto",items.map((x,i)=>[i,x.n+(x.h?" (caliente)":"")]),()=>draw());
+  const items=[];CARTA.forEach(g=>g.i.forEach(x=>{x._k=g.c+"|"+x.n;items.push(x)}));
+  const sc=sel("Producto",items.map((x,i)=>[i,x.n+(x.h?" (caliente)":"")+(off.has(x._k)?" — AGOTADO":""),off.has(x._k)]),()=>draw());
+  {const fe=[...sc[1].options].findIndex(o=>!o.disabled);if(fe>0)sc[1].selectedIndex=fe}
   const bx=document.createElement("div"),pv=document.createElement("b"),S={};
   const ql=document.createElement("label"),qty=document.createElement("input");ql.className="f";ql.textContent="Cantidad";qty.type="number";qty.min="1";qty.value="1";ql.append(qty);
   const add=document.createElement("button"),list=document.createElement("div"),nm=document.createElement("input"),reg=document.createElement("button"),cx=document.createElement("button");
@@ -262,12 +277,12 @@ function openSale(){
     const ad=(k,t,o)=>{const [l,s]=sel(t,o,upd);S[k]=s;bx.append(l)};
     if(x.v)ad("v","Sabor",x.v.map(v=>[v,v]));
     if(x.z)ad("z",x.zl||"Tamaño",x.z.map(([t,p])=>[t,`${t} · ${money(p)}`]));
-    if(x.f)ad("f",x.fi?"Cloud foam (incluido, cambio sin costo)":"Cloud foam",x.fi?[[x.fi,x.fi+" · incluido"],...FO.filter(f=>f!==x.fi).map(f=>[f,"Cambiar a "+f])]:[["","Sin cloud foam"],...FO.map(f=>[f,f+" +$10"])]);
+    if(x.f)ad("f",x.fi?"Cloud foam (incluido, cambio sin costo)":"Cloud foam",x.fi?[[x.fi,x.fi+" · incluido"+(off.has("f|"+x.fi)?" · agotado":""),off.has("f|"+x.fi)],...FO.filter(f=>f!==x.fi).map(f=>[f,"Cambiar a "+f+(off.has("f|"+f)?" · agotado":""),off.has("f|"+f)])]:[["","Sin cloud foam"],...FO.map(f=>[f,f+" +$10"+(off.has("f|"+f)?" · agotado":""),off.has("f|"+f)])]);
     if(!x.x)ad("l","Leche",[["Entera","Entera"],["Deslactosada","Deslactosada"]]);
     if(x.s)ad("s","Shot de espresso",[["","Sin shot"],["Shot","Con shot +$10"]]);
     if(x.pm)ad("pm","Pan de muerto",[["","Sin pan de muerto"],["Pan","Agregar pan de muerto +$30"]]);
     if(x.tp){const w=document.createElement("div");w.id="tpw";w.className="f";const lg=document.createElement("div");lg.style.fontWeight="700";w.append(lg);
-      x.tp.forEach(t=>{const l=document.createElement("label");l.style.cssText="display:inline-block;margin:6px 12px 0 0;font-weight:400";const c=document.createElement("input");c.type="checkbox";c.className="tp";c.value=t;c.style.cssText="width:auto;margin-right:5px";c.onchange=()=>{if(picked().length>nTp())c.checked=false;upd()};l.append(c,t);w.append(l)});bx.append(w)}
+      x.tp.forEach(t=>{const l=document.createElement("label");l.style.cssText="display:inline-block;margin:6px 12px 0 0;font-weight:400";const c=document.createElement("input");c.type="checkbox";c.className="tp";c.value=t;c.disabled=off.has("t|"+t);c.style.cssText="width:auto;margin-right:5px";c.onchange=()=>{if(picked().length>nTp())c.checked=false;upd()};l.append(c,t+(c.disabled?" · agotado":""));w.append(l)});bx.append(w)}
     upd();
   }
   function paint(){
@@ -282,35 +297,57 @@ function openSale(){
   b.append(h,sc[0],bx,pv,ql,add,list,nm,reg,cx);draw();paint();
   $("#tienda").showModal();
 }
-function renderCorte(L,list){
+function renderCorte(L,list,cash){
   const tn=list.filter(o=>o.origen==="tienda"),wn=list.filter(o=>o.origen!=="tienda");
   const env=o=>(o.items||[]).filter(i=>i.name==="Costo de envío").reduce((s,i)=>s+i.q*i.p,0);
   const sm=(a,f)=>a.reduce((s,o)=>s+f(o),0),tot=o=>o.total||0,prod=o=>tot(o)-env(o);
   const tT=sm(tn,tot),wP=sm(wn,prod),eN=wn.filter(o=>env(o)>0),eT=sm(wn,env),all=sm(list,tot);
-  const dn=sm(list.filter(o=>o.status==="entregado"),tot),pend=all-dn,cc=sumCups(list);
+  const dn=sm(cash||list.filter(o=>o.status==="entregado"),tot),pend=sm(list.filter(o=>o.status!=="entregado"),tot),cc=sumCups(list);
   const hel=list.reduce((s,o)=>s+(o.items||[]).filter(i=>/^Helado suave/.test(i.name)).reduce((a,i)=>a+i.q,0),0);
   const dia=new Date(today()+"T12:00:00").toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});
-  const p=box("Corte de caja · "+dia),lines=["Corte de caja · "+dia];
-  const t=document.createElement("table");t.className="tb";t.append(head(["Concepto","Cant.","Importe"]));
-  const r=(a,b,c,cls)=>{const x=document.createElement("tr");if(cls)x.className=cls;x.append(td(a),td(b,"n"),td(c,"n"));t.append(x);lines.push(`${a}: ${b!==""?b+" · ":""}${c}`.replace(/ · $/,""))};
-  r("Ventas de tienda",tn.length,money(tT));
-  r("Pedidos en línea (productos)",wn.length,money(wP));
-  r("Envíos cobrados",eN.length,money(eT));
-  r("TOTAL DEL DÍA",list.length,money(all),"tot");
-  r("Ya entregado","",money(dn));
-  r("Por entregar","",money(pend));
-  r("Vasos vendidos",cc[0],"");r("Latas vendidas",cc[1],"");r("Helados suaves",hel,"");
-  const w=document.createElement("div");w.className="tw";w.append(t);p.append(w);L.append(p);
+  const lines=["Corte de caja · "+dia];
+  // 1) Total vendido
+  const big=box("Total vendido hoy"),n=document.createElement("div");
+  n.style.cssText="font-size:2.4rem;font-weight:700;line-height:1.1";n.textContent=money(all);big.append(n);
+  const sub=document.createElement("div");sub.style.cssText="color:var(--muted);margin-top:4px";
+  sub.textContent=`${list.length} ${list.length===1?"venta":"ventas"} · entregado hoy ${money(dn)}`+(pend?` · por entregar ${money(pend)}`:"");big.append(sub);L.append(big);
+  lines.push(`Total vendido: ${money(all)} (entregado ${money(dn)}, por entregar ${money(pend)})`);
+  // 2) Caja
+  const cj=box("Caja"),fr=document.createElement("div");fr.className="frow";
+  const inp=document.createElement("input");inp.type="number";inp.inputMode="decimal";inp.min="0";inp.placeholder="¿Cuánto había en caja al empezar el turno?";inp.value=cajaFondo==null?"":cajaFondo;
+  const sv=document.createElement("button");sv.textContent=cajaFondo==null?"Guardar":"Actualizar";
+  sv.onclick=async()=>{const v=parseFloat(inp.value);if(isNaN(v)||v<0){alert("Escribe cuánto dinero había en caja al empezar el turno.");return}
+    sv.disabled=true;try{await setDoc(doc(db,"caja",today()),{fondo:v,updatedAt:serverTimestamp()},{merge:true})}catch(e){alert("No se pudo guardar. Revisa tu internet e intenta de nuevo.")}sv.disabled=false};
+  fr.append(inp,sv);cj.append(fr);
+  if(cajaFondo!=null){cj.append(row("Había al empezar",money(cajaFondo)),row("+ Vendido y entregado",money(dn)),row("Debe haber en caja",money(cajaFondo+dn)));
+    lines.push(`Caja al empezar: ${money(cajaFondo)}`,`Vendido y entregado: ${money(dn)}`,`Debe haber en caja: ${money(cajaFondo+dn)}`)}
+  else{const h=document.createElement("p");h.style.cssText="margin:8px 0 0;color:var(--muted)";h.textContent="Escribe cuánto había en caja al empezar y te digo cuánto debe haber ahorita.";cj.append(h)}
+  L.append(cj);
+  // 3) Lo que se vendió
   const pr={};list.forEach(o=>(o.items||[]).forEach(i=>{if(i.name==="Costo de envío")return;const x=pr[i.name]=pr[i.name]||{q:0,m:0};x.q+=i.q;x.m+=i.q*i.p}));
-  const q=box("Cuenta por producto"),t2=document.createElement("table");t2.className="tb";t2.append(head(["Producto","Pzas","Importe"]));
-  const ks=Object.keys(pr).sort((a,b)=>pr[b].m-pr[a].m);let tq=0,tm=0;
-  ks.forEach(k=>{const x=document.createElement("tr");x.append(td(k),td(pr[k].q,"n"),td(money(pr[k].m),"n"));t2.append(x);tq+=pr[k].q;tm+=pr[k].m});
+  const q=box("Lo que se vendió"),t2=document.createElement("table");t2.className="tb";t2.append(head(["Producto","Pzas","Importe"]));
+  const ks=Object.keys(pr).sort((a,b)=>pr[b].m-pr[a].m);let tq=0,tm=0;lines.push("","Lo que se vendió:");
+  ks.forEach(k=>{const x=document.createElement("tr");x.append(td(k),td(pr[k].q,"n"),td(money(pr[k].m),"n"));t2.append(x);tq+=pr[k].q;tm+=pr[k].m;lines.push(`${pr[k].q} × ${k}: ${money(pr[k].m)}`)});
   if(!ks.length){const x=document.createElement("p");x.className="empty";x.textContent="Aún no hay ventas hoy";q.append(x)}
-  else{const x=document.createElement("tr");x.className="tot";x.append(td("Total"),td(tq,"n"),td(money(tm),"n"));t2.append(x);const w2=document.createElement("div");w2.className="tw";w2.append(t2);q.append(w2)}
+  else{const x=document.createElement("tr");x.className="tot";x.append(td("Total productos"),td(tq,"n"),td(money(tm),"n"));t2.append(x);const w2=document.createElement("div");w2.className="tw";w2.append(t2);q.append(w2)}
   L.append(q);
+  // 4) Desglose
+  const dt=document.createElement("details");dt.className="panel";const su=document.createElement("summary");su.textContent="Ver desglose (tienda, en línea y envíos)";su.style.cssText="cursor:pointer;font-weight:700;color:var(--rose)";dt.append(su);
+  const t=document.createElement("table");t.className="tb";t.style.marginTop="10px";t.append(head(["Concepto","Cant.","Importe"]));
+  const r=(a,b,c,cls)=>{const x=document.createElement("tr");if(cls)x.className=cls;x.append(td(a),td(b,"n"),td(c,"n"));t.append(x)};
+  r("Ventas de tienda",tn.length,money(tT));r("Pedidos en línea (productos)",wn.length,money(wP));r("Envíos cobrados",eN.length,money(eT));r("TOTAL DEL DÍA",list.length,money(all),"tot");
+  r("Vasos vendidos",cc[0],"");r("Latas vendidas",cc[1],"");r("Helados suaves",hel,"");
+  const w=document.createElement("div");w.className="tw";w.append(t);dt.append(w);L.append(dt);
   const cp=document.createElement("button");cp.className="csv";cp.textContent="Copiar corte";
   cp.onclick=async()=>{const txt=lines.join("\n");try{await navigator.clipboard.writeText(txt);cp.textContent="¡Copiado!"}catch(e){prompt("Copia el corte:",txt)}};
   L.append(cp);
+}
+function renderMenu(L){
+  const info=box("Productos agotados");const t=document.createElement("p");t.style.cssText="margin:0;color:var(--muted)";t.textContent="Toca un botón para marcar algo como agotado. En la página de clientes se bloquea al instante. Vuelve a tocarlo para activarlo otra vez.";info.append(t);L.append(info);
+  const mk=(title,rows)=>{const p=box(title);rows.forEach(([k,label])=>{const o=off.has(k),r=row(label,""),b=document.createElement("button");b.className="sw"+(o?" off":"");b.textContent=o?"Agotado":"Disponible";b.onclick=()=>{b.disabled=true;setOffKey(k,!o).finally(()=>{b.disabled=false})};r.lastChild.replaceWith(b);p.append(r)});L.append(p)};
+  CARTA.forEach(g=>mk(g.c,g.i.map(x=>[g.c+"|"+x.n,x.n+(x.h?" (caliente)":"")])));
+  mk("Cloud foam (sabores)",FO.map(f=>["f|"+f,f]));
+  mk("Toppings del helado",TP.map(x=>["t|"+x,x]));
 }
 function renderTienda(L,list,all){
   const [v,l]=sumCups(list),tot=list.reduce((s,o)=>s+(o.total||0),0),p=box("Ventas de mostrador · hoy"),b=document.createElement("button");
@@ -320,48 +357,59 @@ function renderTienda(L,list,all){
   if(!list.length){const e=document.createElement("p");e.className="empty";e.textContent="Aún no hay ventas de tienda hoy";L.append(e)}
 }
 function render(){
-  const T=today(),hoy=orders.filter(o=>dayOf(o)===T).sort((a,b)=>ms(b)-ms(a));
-  const act=hoy.filter(o=>o.status!=="entregado").reverse(),done=hoy.filter(o=>o.status==="entregado"&&o.origen!=="tienda");
+  const T=today(),W=Date.now()-15*36e5,hoy=orders.filter(o=>dayOf(o)===T).sort((a,b)=>ms(b)-ms(a));
+  const rec=orders.filter(o=>dayOf(o)===T||(ms(o)>=W&&(o.dest==="CBTis"||o.dest==="Prepa"))).sort((a,b)=>ms(b)-ms(a));
+  const act=rec.filter(o=>o.status!=="entregado").reverse(),done=rec.filter(o=>o.status==="entregado"&&o.origen!=="tienda");
+  const cash=orders.filter(o=>o.status==="entregado"&&delivDay(o)===T);
   $("#cnt").textContent=act.length?`${act.length} por atender`:"";
   $("#rol").textContent=owner?"Patrón":"Empleado";
+  $("#tM").textContent=off.size?`Agotados (${off.size})`:"Agotados";
   $("#tH").hidden=!owner;$("#tS").hidden=!owner;
   const L=$("#list");L.innerHTML="";
   if(tab==="T"){renderTienda(L,hoy.filter(o=>o.origen==="tienda"),hoy);return}
-  if(tab==="C"){renderCorte(L,hoy);return}
+  if(tab==="C"){renderCorte(L,hoy,cash);return}
+  if(tab==="M"){renderMenu(L);return}
   if(tab==="S"&&owner){renderStock(L);return}
-  if(tab==="H"&&owner){const per_=orders.filter(inPer);renderStats(L,per_);if(per==="1")renderCorte(L,per_);renderTable(L,per_);return}
+  if(tab==="H"&&owner){const per_=orders.filter(inPer);renderStats(L,per_);if(per==="1")renderCorte(L,per_,cash);renderTable(L,per_);return}
   const arr=tab==="D"?done:act;
-  if(!arr.length){const p=document.createElement("p");p.className="empty";p.textContent="Sin pedidos hoy";L.append(p);return}
-  arr.forEach(o=>L.append(card(o)));
+  if(!arr.length){const p=document.createElement("p");p.className="empty";p.textContent="Sin pedidos";L.append(p);return}
+  segCards(L,arr,tab!=="D",tab!=="D"?" por atender":"");
 }
-function tabs(k){tab=k;["A","D","T","C","H","S"].forEach(j=>$("#t"+j).className=j===k?"on":"");render()}
-["A","D","T","C","H","S"].forEach(k=>$("#t"+k).onclick=()=>tabs(k));
+function tabs(k){tab=k;["A","D","T","C","M","H","S"].forEach(j=>$("#t"+j).className=j===k?"on":"");render()}
+["A","D","T","C","M","H","S"].forEach(k=>$("#t"+k).onclick=()=>tabs(k));
 function start(){
-  if(unsub)unsub();first=true;qDay=today();
-  const c=collection(db,"orders");
-  const q=owner?query(c,orderBy("createdAt","desc"),limit(1000)):query(c,where("day","==",qDay));
-  unsub=onSnapshot(q,s=>{
-    if(!first&&s.docChanges().some(c=>c.type==="added"&&c.doc.data().origen!=="tienda"))beep();
-    first=false;orders=s.docs.map(d=>({id:d.id,...d.data()}));if(tab!=="S")render();
-  },e=>{$("#list").textContent="No se pudieron leer los pedidos ("+e.code+")"});
+  if(unsub)unsub();if(unsub2)unsub2();unsub2=null;first=true;f2=true;partA=[];partB=[];qDay=today();startCaja();
+  const c=collection(db,"orders"),err=e=>{$("#list").textContent="No se pudieron leer los pedidos ("+e.code+")"};
+  const upd=()=>{orders=[...partA,...partB].sort((a,b)=>ms(b)-ms(a));if(tab!=="S"&&!typing())render()};
+  const watch=(q,isA)=>onSnapshot(q,s=>{
+    const fl=isA?first:f2;
+    if(!fl&&s.docChanges().some(c=>c.type==="added"&&c.doc.data().origen!=="tienda"))beep();
+    if(isA)first=false;else f2=false;
+    const arr=s.docs.map(d=>({id:d.id,...d.data()}));if(isA)partA=arr;else partB=arr;upd();
+  },err);
+  if(owner)unsub=watch(query(c,orderBy("createdAt","desc"),limit(1000)),true);
+  else{unsub=watch(query(c,where("day","==",qDay)),true);unsub2=watch(query(c,where("day","==",mx(Date.now()-864e5))),false)}
 }
+function startOff(){if(unsubO)unsubO();unsubO=onSnapshot(doc(db,"config","agotados"),s=>{off=new Set(s.exists()?(s.data().off||[]):[]);if(tab!=="S"&&!typing())render()},e=>{})}
+function startCaja(){if(unsubC)unsubC();cajaFondo=null;unsubC=onSnapshot(doc(db,"caja",today()),s=>{cajaFondo=s.exists()&&typeof s.data().fondo==="number"?s.data().fondo:null;if(tab!=="S"&&!typing())render()},e=>{})}
 function startStock(){if(unsubS)unsubS();unsubS=null;stock=[];if(!owner)return;unsubS=onSnapshot(query(collection(db,"stock"),orderBy("name")),s=>{stock=s.docs.map(d=>({id:d.id,...d.data()}));if(tab==="S")render()},e=>{})}
 async function awake(){try{await navigator.wakeLock.request("screen")}catch(e){}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&auth.currentUser)awake()});
-setInterval(()=>{if(auth.currentUser){if(today()!==qDay)start();if(tab!=="S")render()}},60000);
+setInterval(()=>{if(auth.currentUser){if(today()!==qDay)start();if(tab!=="S"&&!typing())render()}},60000);
 onAuthStateChanged(auth,u=>{
   $("#login").hidden=!!u;$("#app").hidden=!u;
   if(u){
     owner=(u.email||"").toLowerCase()===OWNER.toLowerCase();
     if(!owner&&(tab==="H"||tab==="S"))tab="A";
-    ["A","D","T","C","H","S"].forEach(j=>$("#t"+j).className=j===tab?"on":"");
-    start();startStock();awake();$("#snd").hidden=!!ctx&&ctx.state==="running";render();
-  }else{if(unsub)unsub();if(unsubS)unsubS();unsub=null;unsubS=null;orders=[];stock=[]}
+    ["A","D","T","C","M","H","S"].forEach(j=>$("#t"+j).className=j===tab?"on":"");
+    start();startStock();startOff();awake();$("#snd").hidden=!!ctx&&ctx.state==="running";render();
+  }else{if(unsub)unsub();if(unsub2)unsub2();unsub2=null;partA=[];partB=[];if(unsubS)unsubS();if(unsubO)unsubO();if(unsubC)unsubC();unsub=null;unsubS=null;unsubO=null;unsubC=null;orders=[];stock=[];off=new Set();cajaFondo=null}
 });
 $("#in").onclick=async()=>{
   $("#lerr").textContent="";audio();
   try{await signInWithEmailAndPassword(auth,$("#em").value.trim(),$("#pw").value)}catch(e){$("#lerr").textContent="Correo o contraseña incorrectos."}
 };
 $("#snd").onclick=async()=>{await audio();$("#snd").hidden=true;beep()};
+$("#fabT").onclick=openSale;
 $("#out").onclick=()=>signOut(auth);
 </script></body></html>
