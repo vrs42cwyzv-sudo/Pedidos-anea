@@ -25,6 +25,8 @@ button{font:inherit;cursor:pointer}
 .pk,.go{background:var(--pink-d);color:var(--ink);border:0;border-radius:999px;font-weight:700;padding:10px 20px}
 .pk:active,.go:active{background:var(--pink-d)}
 .go:disabled{opacity:.55}
+.item.off{opacity:.55}.item.off .pk{background:#cfc4c4;color:#6b5f60;cursor:not-allowed}
+.chip input:disabled+span{opacity:.45;text-decoration:line-through;cursor:not-allowed}
 .item.tmp{background:rgba(244,160,80,.20);border-left:5px solid #e8883a;border-radius:10px;padding-left:12px;margin-top:6px;border-bottom:0}
 .item.tmp .pk{background:#f4a560}.item.tmp .pk:active{background:#e8883a}
 h2.tm{border-bottom-color:#e8883a;color:#a8480f}
@@ -125,8 +127,11 @@ const MENU=[
 {c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:30,x:1}]}
 ];
 MENU.forEach(g=>g.i.forEach(it=>{const m=Math.min(...(it.z?it.z.map(z=>z[1]):[it.p]));it.d=(it.d?it.d+" · ":"")+(it.z?"desde ":"")+money(m)}));
-let cart=[],cur=null;
-const grp=(t,k,o)=>`<fieldset><legend>${t}</legend>${o.map(([v,l,p],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i?"":" checked"}><span>${l}${p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`;
+let cart=[],cur=null,curKey="";const ROWS=[];let OFF=new Set();
+const isOff=k=>OFF.has(k);window.isOff=isOff;
+function applyOff(){ROWS.forEach(({k,r})=>{const o=isOff(k),b=r.querySelector("button");r.classList.toggle("off",o);b.disabled=o;b.textContent=o?"Agotado":"Elegir"})}
+window.setOff=l=>{OFF=new Set(l||[]);applyOff()};
+const grp=(t,k,o)=>{const first=o.findIndex(x=>!x[3]);return `<fieldset><legend>${t}</legend>${o.map(([v,l,p,off],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i===first?" checked":""}${off?" disabled":""}><span>${l}${off?" · agotado":p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`};
 const val=k=>{const e=$(`input[name=${k}]:checked`);return e?e.value:""};
 const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")&&!cur.fi?10:0)+(val("s")?10:0)+(val("pm")?30:0);
 const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0),units=()=>cart.reduce((s,x)=>s+x.q,0);
@@ -136,20 +141,21 @@ MENU.forEach(g=>{
   g.i.forEach(it=>{
     const r=document.createElement("div");r.className="item"+(it.t?" tmp":"");
     r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
-    r.querySelector("button").onclick=()=>openCfg(it);
+    const key=g.c+"|"+it.n;ROWS.push({k:key,r});
+    r.querySelector("button").onclick=()=>openCfg(it,key);
     $("#menu").append(r);
   });
 });
 
-function openCfg(it){
-  cur=it;let h=`<h3>${it.n}${it.h?" caliente":""}</h3>`;
+function openCfg(it,key){
+  cur=it;curKey=key||"";let h=`<h3>${it.n}${it.h?" caliente":""}</h3>`;
   if(it.v)h+=grp("Sabor","v",it.v.map(v=>[v,v,0]));
   if(it.z)h+=grp(it.zl||"Tamaño","z",it.z.map(([l,p])=>[l,`${l} · ${money(p)}`,0]));
-  if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10])]);
+  if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0,isOff("f|"+it.fi)],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0,isOff("f|"+f)])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10,isOff("f|"+f)])]);
   if(!it.x)h+=grp("Leche","l",[["Entera","Entera",0],["Deslactosada","Deslactosada",0]]);
   if(it.s)h+=grp("Shot de espresso","s",[["","Sin shot",0],["Shot","Con shot",10]]);
   if(it.pm)h+=grp("Pan de muerto","pm",[["","Sin pan de muerto",0],["Pan","Agregar pan de muerto",30]]);
-  if(it.tp)h+=`<fieldset id="tpf"><legend id="tpl"></legend>${it.tp.map(t=>`<label class="chip"><input type="checkbox" name="tp" value="${t}"><span>${t}</span></label>`).join("")}</fieldset>`;
+  if(it.tp)h+=`<fieldset id="tpf"><legend id="tpl"></legend>${it.tp.map(t=>`<label class="chip"><input type="checkbox" name="tp" value="${t}"${isOff("t|"+t)?" disabled":""}><span>${t}${isOff("t|"+t)?" · agotado":""}</span></label>`).join("")}</fieldset>`;
   h+=`<button class="go" id="add"></button><button class="link" id="cx">Cancelar</button>`;
   $("#cfgb").innerHTML=h;
   const nTp=()=>{if(!it.tp)return 0;const z=it.z.find(x=>x[0]===val("z"));return z&&z[2]||0};
@@ -171,7 +177,7 @@ function addItem(){
   const name=cur.n+(cur.h?" caliente":"")+(val("v")?` ${val("v")}`:"");
   const key=name+"|"+parts.join(",");
   const ex=cart.find(x=>x.key===key);
-  if(ex)ex.q++;else cart.push({key,name,opt:parts.join(", "),p:price(),q:1});
+  if(ex)ex.q++;else cart.push({key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1});
   upd();
 }
 function upd(){
@@ -202,6 +208,8 @@ $("#send").onclick=async()=>{
   if(!name){err("Escribe tu nombre para poder llamarte cuando esté listo.");$("#name").focus();return}
   if(ph.replace(/\D/g,"").length<10){err("Escribe tu teléfono a 10 dígitos para poder contactarte.");$("#phone").focus();return}
   if(e==="Otros"&&!ad){err("Escribe la dirección de tu casa.");$("#addr").focus();return}
+  const gone=[...new Set(cart.filter(x=>x.pk&&isOff(x.pk)).map(x=>x.name))];
+  if(gone.length){err("Se agotó: "+gone.join(", ")+". Quítalo de tu pedido para poder continuar.");return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
   const order={name,phone:ph,day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
@@ -221,8 +229,9 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,collection,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,addDoc,serverTimestamp,doc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const db=getFirestore(initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}));
+onSnapshot(doc(db,"config","agotados"),s=>window.setOff&&window.setOff(s.exists()?(s.data().off||[]):[]),()=>{});
 window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp()});return true};
 </script>
 </body>
