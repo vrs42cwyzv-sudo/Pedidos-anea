@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Anea">
 <meta name="color-scheme" content="only light">
 <title>Anea · Pide tu bebida</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -258,6 +261,8 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
  <div id="a2" hidden><h3 id="hi"></h3><p class="mini">Tu tarjeta de lealtad</p>
   <div class="sg" id="sg"></div><div class="qc"><div id="qsm"></div><b id="qc2"></b><small>Muéstralo al pagar para que te pongan tu sello</small></div><div class="qr2"><button id="qf">Pantalla completa</button><button id="qd">Descargar mi QR</button></div><p id="sl" style="font-weight:700;margin:10px 0 0"></p><div id="perk"></div>
   <p class="mini">Los sellos se suman cuando te entregan tu bebida. La bebida 10 es gratis y luego la tarjeta empieza de nuevo.</p>
+  <button class="sbtn" id="hm" style="margin-top:12px" hidden>📲 Agregar a mi pantalla de inicio</button>
+  <div id="hmh" class="perk" hidden></div>
   <button class="link" id="ax">Cerrar sesión</button><button class="link" id="ac2">Cerrar</button></div>
 </div></dialog>
 <script>
@@ -319,6 +324,16 @@ $q("#al").onclick=async()=>{const name=$q("#an").value.trim(),d=$q("#ap").value.
 $q("#ax").onclick=async()=>{await signOut(auth);$q("#adlg").close()};
 $q("#qf").onclick=()=>{$q("#qbig").innerHTML=aneaQRsvg(cli.code,340);$q("#qcode").textContent=cli.code;$q("#qdlg").showModal()};$q("#qx").onclick=()=>$q("#qdlg").close();
 $q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([aneaQRsvg(cli.code,600)],{type:"image/svg+xml"}));a.download="mi-tarjeta-anea.svg";a.click()};
+
+/* agregar a pantalla de inicio */
+(()=>{const b=$q("#hm"),h=$q("#hmh");let ev=null;
+ const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+ if(!standalone)b.hidden=false;
+ addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e});
+ b.onclick=async()=>{if(ev){ev.prompt();try{await ev.userChoice}catch(x){}ev=null;return}
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  h.hidden=!h.hidden;if(h.hidden)return;
+  h.innerHTML=ios?"<b>En iPhone o iPad:</b><br>1. Abre esta página en <b>Safari</b>.<br>2. Toca el botón <b>Compartir</b> (el cuadro con la flecha hacia arriba).<br>3. Elige <b>Agregar a pantalla de inicio</b> y toca <b>Agregar</b>.":"<b>En Android:</b><br>1. Abre esta página en <b>Chrome</b>.<br>2. Toca los <b>tres puntos</b> de arriba a la derecha.<br>3. Elige <b>Agregar a pantalla de inicio</b> o <b>Instalar app</b>."}})();
 /* al abrir el pedido: datos de la cuenta */
 $q("#open").addEventListener("click",()=>setTimeout(()=>{let d=$q("#acctn");if(!d){d=document.createElement("p");d.id="acctn";d.className="mini";$q("#name").before(d)}
  if(cli){$q("#name").value=cli.name;$q("#phone").value=fmtPh(cli.phone||"");d.textContent="✓ Tus datos vienen de tu cuenta. Ganas sellos con este pedido."}else{d.innerHTML="";const bt=document.createElement("button");bt.type="button";bt.className="sbtn";bt.style.cssText="border-color:var(--rose)";bt.textContent="🎁 Crea tu tarjeta y gana sellos con este pedido";bt.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(bt)}},50));
