@@ -56,6 +56,23 @@ label.f{display:block;font-weight:700;margin:16px 0 4px}
 input.tx,textarea{width:100%;font:inherit;padding:11px;border-radius:10px;border:1.5px solid var(--pink-d);background:#fff;color:var(--ink)}
 a.go[hidden]{display:none}
 .err{color:#a3262d;margin:8px 0 0;min-height:1.2em}
+
+.acc{position:fixed;top:10px;right:10px;z-index:6;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#b47a87,#9a5f6d);color:#fff;border:0;border-radius:99px;padding:10px 16px;font:600 15px system-ui;box-shadow:0 4px 14px #9a5f6d66}
+.acc .dot{width:24px;height:24px;border-radius:50%;background:#fff;color:#9a5f6d;display:flex;align-items:center;justify-content:center;font-size:13px}
+.acc.on{background:#fbf8f3;color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 8px #0002}.acc.on .dot{background:var(--rose);color:#fff}
+#adlg .box{max-width:380px}#adlg input.tx{margin-bottom:8px}
+.sbtn{display:block;width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;font:600 15px system-ui;margin-bottom:8px;color:var(--ink)}
+.sg{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0}
+.sg i{aspect-ratio:1;border-radius:50%;border:2px dashed var(--rose);display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--rose);font-size:14px}
+.sg i.f{background:var(--rose);color:#fff;border-style:solid}.sg i.g{border-color:#b8861b}.sg i.g.f{background:#e9b949}
+.mini{font-size:13px;color:var(--muted)}.perk{background:#fff3d4;border:1px solid #e9b949;border-radius:12px;padding:10px;margin-top:10px;font-size:14px}
+.ok{background:#e8f6e9;border:1px solid #9fd5a4;border-radius:12px;padding:10px;margin-top:10px;font-size:14px}
+.cta{display:block;width:100%;border:0;background:var(--rose);color:#fff;border-radius:12px;padding:13px;font:800 15px system-ui;margin-top:8px}
+.qc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;margin:10px 0}.qc svg{width:170px;height:170px;display:block;margin:0 auto}
+.qc b{display:block;letter-spacing:1.5px;margin-top:6px;font-size:15px}.qc small{color:var(--muted)}
+.qr2{display:flex;gap:8px;margin-top:8px}.qr2 button{flex:1;border:1px solid var(--line);background:#fbf8f3;border-radius:10px;padding:10px;font:600 13px system-ui;color:var(--ink)}
+#qdlg{border:0;border-radius:18px;padding:18px;background:#fff;text-align:center;max-width:92vw}#qdlg svg{width:min(78vw,340px);height:auto;display:block;margin:0 auto}#qdlg b{display:block;margin:8px 0 2px;font-size:18px;letter-spacing:2px}
+.aerr{color:#b3261e;font-size:13px;margin:4px 0;min-height:1em}
 </style>
 </head>
 <body>
@@ -212,7 +229,7 @@ $("#send").onclick=async()=>{
   if(gone.length){err("Se agotó: "+gone.join(", ")+". Quítalo de tu pedido para poder continuar.");return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
-  const order={name,phone:ph,day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
+  const order={name,phone:ph,...(window.aneaUid?{tarjeta:window.aneaUid}:{}),day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
   let t=`Hola, soy ${name}. Quiero pedir:\n`;
   cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${money(x.p*x.q)}\n`);
   t+=(envio()?`Costo de envío: ${money(envio())}\n`:"")+`Total: ${money(total()+envio())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
@@ -227,12 +244,87 @@ $("#send").onclick=async()=>{
 };
 $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();window.scrollTo({top:0})};
 </script>
+
+<button class="acc" id="accb"><span class="dot">+</span><span id="acct">Mi cuenta</span></button>
+<dialog id="qdlg"><div id="qbig"></div><b id="qcode"></b><p class="mini" style="margin:2px 0 10px">Enséñaselo a la empleada para que lo escanee</p><button class="go" id="qx">Cerrar</button></dialog>
+<dialog id="adlg"><div class="box">
+ <div id="a1"><h3>Tu bebida 10 es gratis 🎁</h3><p class="mini">Crea tu tarjeta y junta un sello por cada bebida. No pagas nada.</p>
+  <button class="sbtn" id="ag">G&nbsp; Continuar con Google</button>
+  <p class="mini" style="text-align:center;margin:8px 0">— o solo con tu nombre y teléfono —</p>
+  <label class="f" for="an">Tu nombre</label><input class="tx" id="an" maxlength="40" autocomplete="given-name">
+  <label class="f" for="ap">Tu teléfono (10 dígitos)</label><input class="tx" id="ap" type="tel" inputmode="tel" maxlength="20" autocomplete="tel">
+  <p class="aerr" id="aerr" role="alert"></p>
+  <button class="go" id="al">Crear mi tarjeta</button><button class="link" id="ac">Ahora no</button></div>
+ <div id="a2" hidden><h3 id="hi"></h3><p class="mini">Tu tarjeta de lealtad</p>
+  <div class="sg" id="sg"></div><div class="qc"><div id="qsm"></div><b id="qc2"></b><small>Muéstralo al pagar para que te pongan tu sello</small></div><div class="qr2"><button id="qf">Pantalla completa</button><button id="qd">Descargar mi QR</button></div><p id="sl" style="font-weight:700;margin:10px 0 0"></p><div id="perk"></div>
+  <p class="mini">Los sellos se suman cuando te entregan tu bebida. La bebida 10 es gratis y luego la tarjeta empieza de nuevo.</p>
+  <button class="link" id="ax">Cerrar sesión</button><button class="link" id="ac2">Cerrar</button></div>
+</div></dialog>
+<script>
+function aneaQR(text){
+ const S=25,D=28,E=16,bytes=[...new TextEncoder().encode(text)];if(bytes.length>26)throw Error("largo");
+ let bits=[];const put=(v,n)=>{for(let i=n-1;i>=0;i--)bits.push((v>>>i)&1)};
+ put(4,4);put(bytes.length,8);bytes.forEach(b=>put(b,8));put(0,Math.min(4,D*8-bits.length));while(bits.length%8)bits.push(0);
+ const cw=[];for(let i=0;i<bits.length;i+=8)cw.push(parseInt(bits.slice(i,i+8).join(""),2));
+ for(let p=0xEC;cw.length<D;p^=0xEC^0x11)cw.push(p);
+ const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z&255};
+ let dv=Array(E).fill(0);dv[E-1]=1;let root=1;
+ for(let i=0;i<E;i++){for(let j=0;j<E;j++){dv[j]=mul(dv[j],root);if(j+1<E)dv[j]^=dv[j+1]}root=mul(root,2)}
+ let rs=Array(E).fill(0);cw.forEach(b=>{const f=b^rs.shift();rs.push(0);dv.forEach((c,i)=>{rs[i]^=mul(c,f)})});
+ const all=cw.concat(rs);
+ const m=Array.from({length:S},()=>Array(S).fill(false)),fn=Array.from({length:S},()=>Array(S).fill(false));
+ const sf=(x,y,d)=>{m[y][x]=d;fn[y][x]=true};
+ for(let i=0;i<S;i++){sf(6,i,i%2==0);sf(i,6,i%2==0)}
+ const fd=(cx,cy)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),x=cx+dx,y=cy+dy;if(x>=0&&x<S&&y>=0&&y<S)sf(x,y,d!=2&&d!=4)}};
+ fd(3,3);fd(S-4,3);fd(3,S-4);
+ for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)sf(18+dx,18+dy,Math.max(Math.abs(dx),Math.abs(dy))!=1);
+ const data=0;let rem=data;for(let i=0;i<10;i++)rem=(rem<<1)^((rem>>>9)*0x537);
+ const fb=((data<<10)|rem)^0x5412,g=i=>((fb>>>i)&1)!=0;
+ for(let i=0;i<=5;i++)sf(8,i,g(i));sf(8,7,g(6));sf(8,8,g(7));sf(7,8,g(8));for(let i=9;i<15;i++)sf(14-i,8,g(i));
+ for(let i=0;i<8;i++)sf(S-1-i,8,g(i));for(let i=8;i<15;i++)sf(8,S-15+i,g(i));sf(8,S-8,true);
+ let k=0;for(let right=S-1;right>=1;right-=2){if(right==6)right=5;for(let v=0;v<S;v++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)==0,y=up?S-1-v:v;if(!fn[y][x]&&k<all.length*8){m[y][x]=((all[k>>>3]>>>(7-(k&7)))&1)!=0;k++}}}
+ for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(!fn[y][x]&&(x+y)%2==0)m[y][x]=!m[y][x];
+ return m}
+function aneaQRsvg(text,px){const m=aneaQR(text),n=m.length,q=2;let r="";m.forEach((row,y)=>row.forEach((v,x)=>{if(v)r+=`<rect x="${x+q}" y="${y+q}" width="1" height="1"/>`}));return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n+2*q} ${n+2*q}" width="${px||200}" height="${px||200}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><g fill="#000">${r}</g></svg>`}
+
+</script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,collection,addDoc,serverTimestamp,doc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const db=getFirestore(initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}));
+import {getAuth,onAuthStateChanged,signInWithPopup,signInWithRedirect,GoogleAuthProvider,signInAnonymously,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,addDoc,serverTimestamp,doc,onSnapshot,setDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"},"cliente"),db=getFirestore(app),auth=getAuth(app);
 onSnapshot(doc(db,"config","agotados"),s=>window.setOff&&window.setOff(s.exists()?(s.data().off||[]):[]),()=>{});
-window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp()});return true};
+
+
+/* ---------- Cuenta y tarjeta de lealtad ---------- */
+const $q=s=>document.querySelector(s);let me=null,cli=null,unsubC=null;
+const fmtPh=d=>d.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
+function sg(n){$q("#sg").innerHTML=Array.from({length:10},(_,i)=>`<i class="${i<n&&i<9?"f":""} ${i==9?"g":""}">${i==9?"🎁":i<n?"♥":i+1}</i>`).join("");$q("#sl").textContent=n>=9?"¡Tu próxima bebida es gratis!":n+" de 9 sellos · la bebida 10 es gratis";$q("#perk").innerHTML=n>=9?'<div class="perk">🎁 Tu próxima bebida es la número 10 y va por la casa. Muestra tu QR al pagar y tu tarjeta vuelve a empezar desde 0.</div>':'<div class="mini">Te faltan '+(9-n)+' para tu bebida gratis.</div>'}
+function paintAcc(){const on=!!cli;$q(".acc").classList.toggle("on",on);$q(".acc .dot").textContent=on?cli.name[0].toUpperCase():"+";$q("#acct").textContent=on?cli.name.split(" ")[0]+((cli.n||0)>=9?" · 🎁 gratis":" · "+(cli.n||0)+"/10"):"Mi cuenta";
+ $q("#a1").hidden=on;$q("#a2").hidden=!on;
+ if(!on){$q("#ag").hidden=!!me;if(me&&!$q("#an").value)$q("#an").value=me.displayName||""}
+ if(on){$q("#hi").textContent="Hola, "+cli.name;const code=cli.code||"";$q("#qsm").innerHTML=aneaQRsvg(code,170);$q("#qc2").textContent=code;sg(cli.n||0);$q("#ax").hidden=!!(me&&me.isAnonymous)}}
+onAuthStateChanged(auth,u=>{me=u;cli=null;window.aneaUid=null;if(unsubC)unsubC();unsubC=null;paintAcc();if(!u)return;
+ unsubC=onSnapshot(doc(db,"clientes",u.uid),s=>{cli=s.exists()?s.data():null;window.aneaUid=cli?u.uid:null;paintAcc()},()=>{})});
+$q("#accb").onclick=()=>{paintAcc();$q("#adlg").showModal()};$q("#ac").onclick=$q("#ac2").onclick=()=>$q("#adlg").close();
+const aerr=m=>$q("#aerr").textContent=m||"";
+$q("#ag").onclick=async()=>{aerr();try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){try{await signInWithRedirect(auth,new GoogleAuthProvider())}catch(x){aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}}else if(!e||e.code!=="auth/popup-closed-by-user")aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}};
+$q("#al").onclick=async()=>{const name=$q("#an").value.trim(),d=$q("#ap").value.replace(/\D/g,"").slice(-10);aerr();
+ if(!name){aerr("Escribe tu nombre.");return}if(d.length!==10){aerr("Escribe tu teléfono a 10 dígitos.");return}
+ const b=$q("#al");b.disabled=true;b.textContent="Creando…";
+ try{let u=auth.currentUser;if(!u)u=(await signInAnonymously(auth)).user;
+  await setDoc(doc(db,"clientes",u.uid),{name:name.slice(0,40),phone:d,code:"ANEA-"+u.uid.slice(0,10),n:0,gifts:0,createdAt:serverTimestamp()})}
+ catch(e){aerr("No se pudo crear tu tarjeta. Revisa tu internet e intenta de nuevo.")}
+ b.disabled=false;b.textContent="Crear mi tarjeta"};
+$q("#ax").onclick=async()=>{await signOut(auth);$q("#adlg").close()};
+$q("#qf").onclick=()=>{$q("#qbig").innerHTML=aneaQRsvg(cli.code,340);$q("#qcode").textContent=cli.code;$q("#qdlg").showModal()};$q("#qx").onclick=()=>$q("#qdlg").close();
+$q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([aneaQRsvg(cli.code,600)],{type:"image/svg+xml"}));a.download="mi-tarjeta-anea.svg";a.click()};
+/* al abrir el pedido: datos de la cuenta */
+$q("#open").addEventListener("click",()=>setTimeout(()=>{let d=$q("#acctn");if(!d){d=document.createElement("p");d.id="acctn";d.className="mini";$q("#name").before(d)}
+ if(cli){$q("#name").value=cli.name;$q("#phone").value=fmtPh(cli.phone||"");d.textContent="✓ Tus datos vienen de tu cuenta. Ganas sellos con este pedido."}else{d.innerHTML="";const bt=document.createElement("button");bt.type="button";bt.className="sbtn";bt.style.cssText="border-color:var(--rose)";bt.textContent="🎁 Crea tu tarjeta y gana sellos con este pedido";bt.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(bt)}},50));
+new MutationObserver(()=>{const dn=$q("#done");if(!dn.hidden&&!$q("#sx")){const d=document.createElement("div");d.id="sx";if(cli){d.className="ok";d.innerHTML="⭐ Tus sellos se suman cuando te entreguen tu bebida. Llevas <b>"+(cli.n||0)+"</b> de 9; la bebida 10 es gratis."}else{d.className="perk";d.innerHTML="<b>¿Quieres que esta bebida cuente?</b> Crea tu tarjeta y empiezas a juntar sellos.";const b=document.createElement("button");b.className="cta";b.textContent="Crear mi tarjeta";b.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(b)}$q("#doneP").after(d)}if(dn.hidden){const x=$q("#sx");x&&x.remove()}}).observe($q("#done"),{attributes:true,attributeFilter:["hidden"]});
+
+window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp(),...(o.tarjeta?{tarjeta:o.tarjeta}:{})});return true};
 </script>
 </body>
 </html>

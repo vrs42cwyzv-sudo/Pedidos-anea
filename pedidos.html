@@ -70,13 +70,24 @@ table.tb{font-size:.84rem}.tb th,.tb td{padding:8px 6px}.tb.in{font-size:.8rem}
 dialog{padding:16px;width:94vw}
 }
 a.wa{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:999px;background:#5fa86a;color:#fff;font-weight:700;text-decoration:none}
+#tbody .go{margin-bottom:6px}#tbody .csv{margin-top:34px;padding:12px;background:transparent;border:1px solid var(--pink-d);color:#7d4a57;font-weight:600}
+.it.gift{color:#2f7d3b;font-weight:700}
+.it.sl{color:#7d4a57;font-weight:700;margin-top:4px}
+.lyg{margin:8px 0;padding:8px 10px;border-radius:10px;background:#e8f6e9;border:2px solid #5fa86a;color:#2f7d3b;font-weight:700;font-size:.92rem}.lyk{margin:8px 0;padding:6px 10px;border-radius:10px;background:#f6e6e9;color:#7d4a57;font-weight:700;font-size:.88rem}
+.gf{margin-top:8px;padding:8px 10px;border-radius:10px;background:#e8f6e9;border:1px solid #9fd5a4;color:#2f7d3b;font-weight:700;font-size:.95rem}
+.lyb{margin:12px 0;padding:12px;border:2px dashed var(--pink-d);border-radius:14px;background:#fff}.lyh{font-weight:800;margin-bottom:8px;color:var(--rose)}.lyn{font-size:1.25rem;font-weight:700;background:#e8f6e9;border:1px solid #9fd5a4;border-radius:10px;padding:10px;margin-bottom:6px}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin:10px 0}.dots i{aspect-ratio:1;border-radius:50%;border:1.5px dashed var(--rose);font-style:normal;font-size:.7rem;display:flex;align-items:center;justify-content:center;color:var(--rose)}.dots i.f{background:var(--rose);color:#fff;border-style:solid}.dots i.nw{border:2px solid #5fa86a;color:#3f8a4a}.dots i.g{border-color:#b8861b}.dots i.g.f{background:#e9b949}
+.lyx{font-weight:700;margin:4px 0}.lyw2{margin:6px 0;padding:8px 10px;border-radius:10px;background:#fff3d4;border:1px solid #e9b949;color:#7a5200;font-size:.9rem}
+.scv{width:100%;max-height:260px;border-radius:12px;margin-top:8px;background:#000;object-fit:cover}.sce{margin:6px 0;color:#a33}.lk{border:0;background:none;color:var(--muted);text-decoration:underline;padding:6px}
+.kfl{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font:inherit;margin-bottom:8px}.dy{border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:6px}.dy summary{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:6px;padding:10px;font-weight:700;font-size:.9rem;cursor:pointer}.dy ul{margin:0;padding:0 10px 8px;list-style:none;font-size:.85rem}.dy li{padding:6px 0;border-top:1px solid #eee}.dy .bd,.dy li.bd{color:#c0392b;font-weight:700}.dy li.rmv{background:#fff3d4;color:#8a5a00;font-weight:700;padding:6px}.wh{color:var(--muted);font-weight:400}.gr{color:#2f7d3b;font-weight:800}.gr2{grid-column:1/-1;color:#2f7d3b;background:#e8f6e9;border-radius:8px;padding:3px 8px;font-size:.82rem}.rmv2{grid-column:1/-1;color:#8a5a00;background:#fff3d4;border-radius:8px;padding:3px 8px;font-size:.82rem}
+.kc{cursor:pointer}.kc:hover{background:#f6e6e9}.kpk{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.kpk button,.kpk span{aspect-ratio:1;border-radius:50%;border:2px dashed var(--rose);background:#fff;color:var(--rose);font:700 1.1rem system-ui;padding:0;display:flex;align-items:center;justify-content:center}.kpk .f{background:var(--rose);color:#fff;border-style:solid}.kpk .nw{border:3px solid #5fa86a;color:#3f8a4a}.kpk .rm{background:#fdeaea;border:3px solid #c0392b;color:#c0392b}.kpk .g{border-color:#b8861b}
 </style></head><body>
 <section id="login"><h1>Anea</h1><p>Pedidos</p>
 <label>Correo<input id="em" type="email" autocomplete="username"></label>
 <label>Contraseña<input id="pw" type="password" autocomplete="current-password"></label>
 <p id="lerr" role="alert"></p><button id="in">Entrar</button></section>
 <section id="app" hidden>
-<header><b>Pedidos</b><span id="rol"></span><span id="cnt"></span><nav><button id="tA" class="on">Activos</button><button id="tD">Entregados</button><button id="tT">Tienda</button><button id="tC">Corte</button><button id="tM">Agotados</button><button id="tH" hidden>Historial</button><button id="tS" hidden>Stock</button><button id="out">Salir</button></nav></header>
+<header><b>Pedidos</b><span id="rol"></span><span id="cnt"></span><nav><button id="tA" class="on">Activos</button><button id="tD">Entregados</button><button id="tT">Tienda</button><button id="tC">Corte</button><button id="tM">Agotados</button><button id="tH" hidden>Historial</button><button id="tS" hidden>Stock</button><button id="tK" hidden>Clientas</button><button id="out">Salir</button></nav></header>
 <button id="snd">🔔 Toca aquí para activar el sonido</button>
 <div id="list"></div>
 <button id="fabT">＋ Venta en tienda</button></section>
@@ -84,10 +95,10 @@ a.wa{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:999px;
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,query,where,orderBy,limit,onSnapshot,doc,updateDoc,addDoc,deleteDoc,setDoc,arrayUnion,arrayRemove,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,query,where,orderBy,limit,onSnapshot,doc,updateDoc,addDoc,deleteDoc,setDoc,getDoc,getDocs,writeBatch,arrayUnion,arrayRemove,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"}),auth=getAuth(app),db=getFirestore(app),$=s=>document.querySelector(s);
 const OWNER="warrior101204@gmail.com";
-let tab="A",orders=[],first=true,unsub=null,ctx=null,owner=false,qDay="",stock=[],unsubS=null,off=new Set(),unsubO=null,cajaFondo=null,unsubC=null,unsub2=null,partA=[],partB=[],f2=true;
+let tab="A",orders=[],first=true,unsub=null,ctx=null,owner=false,qDay="",stock=[],unsubS=null,off=new Set(),unsubO=null,cajaFondo=null,unsubC=null,unsub2=null,partA=[],partB=[],f2=true,otros=[],unsubX=null,clientes=[],sellos=[],unsubK=null,unsubL=null,cardCache={},kSel=null,kQ="",kT=null;
 const delivDay=o=>o.deliveredAt&&o.deliveredAt.toMillis?mx(o.deliveredAt.toMillis()):dayOf(o);
 const dayLabel=d=>d===today()?"Hoy":d===mx(Date.now()-864e5)?"Ayer":new Date(d+"T12:00:00").toLocaleDateString("es-MX",{weekday:"short",day:"numeric",month:"short"});
 function segCards(L,arr,oldestFirst,suf){
@@ -115,7 +126,8 @@ function card(o){
   const n=document.createElement("b");n.textContent=o.name;
   const s=document.createElement("span");s.textContent=`${hm(o)} · ${o.dest}`;
   h.append(n,s);c.append(h);
-  o.items.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=i.name==="Costo de envío"?`Costo de envío · $${i.p}`:`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"");c.append(d)});
+  o.items.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=i.name==="Costo de envío"?`Costo de envío · $${i.p}`:`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"")+(i.regalo?" · 🎁 GRATIS (bebida 10 de su tarjeta)":"");if(i.regalo)d.className="it gift";c.append(d)});
+  if(o.sellos&&o.status==="entregado"){const d=document.createElement("div"),k=o.sellos;d.className="it sl";d.textContent=k.gift?`🎁 Bebida gratis aplicada · tarjeta reiniciada`+(k.add>0?` · +${k.add} ${k.add==1?"sello":"sellos"} (queda en ${k.to} de 10)`:""):`⭐ +${k.add} ${k.add==1?"sello":"sellos"} (de ${k.from} a ${k.to} de 10) · total ${money(o.total)}`;c.append(d)}
   if(o.phone){const a=document.createElement("a");a.className="nt";a.href="tel:"+o.phone.replace(/[^\d+]/g,"");a.textContent="📞 "+o.phone;c.append(a)}
   if(o.note){const d=document.createElement("div");d.className="nt";d.textContent="Indicaciones: "+o.note;c.append(d)}
   const num=(o.phone||"").replace(/\D/g,"").replace(/^(52)?1?(\d{10})$/,"52$2");
@@ -125,10 +137,14 @@ function card(o){
     const nm=(o.name||"").split(" ")[0],t=listo?`Hola ${nm}, tu pedido de Anea ya está listo ☕ ¡Gracias!`:`Hola ${nm}, recibimos tu pedido en Anea y ya lo estamos preparando ☕ ¡Gracias!`;
     w.href=`https://wa.me/${num}?text=${encodeURIComponent(t)}`;c.append(w);
   }
+  if(o.tarjeta&&o.status!=="entregado"){const cd=needCard(o.tarjeta);if(cd){const d=drinksOf(o.items),{f:gf,nn}=calc(cd.n||0,d),ch=cheapest(o.items),bx=document.createElement("div");
+    if(gf&&ch){bx.className="lyg";bx.textContent=`🎁 Esta bebida es GRATIS (la 10 de su tarjeta): ${ch.name} · −$${ch.p} · COBRAR $${Math.max(0,(o.total||0)-ch.p)}. La tarjeta se reinicia al entregar.`}
+    else if(d>0){bx.className="lyk";bx.textContent=`⭐ Tarjeta de ${cd.name}: al entregar suma ${d} ${d===1?"sello":"sellos"} (queda en ${nn} de 10)`}
+    if(bx.className)c.append(bx)}}
   const f=document.createElement("div");f.className="ft";
   const t=document.createElement("b");t.textContent="$"+o.total;f.append(t);
   const nx=NX[o.status];
-  if(nx){const b=document.createElement("button");b.textContent=nx[1];b.onclick=()=>updateDoc(doc(db,"orders",o.id),nx[0]==="entregado"?{status:"entregado",deliveredAt:serverTimestamp()}:{status:nx[0]});f.append(b)}
+  if(nx){const b=document.createElement("button");b.textContent=nx[1];b.onclick=()=>{if(nx[0]==="entregado"&&o.tarjeta){b.disabled=true;deliverWithCard(o)}else updateDoc(doc(db,"orders",o.id),nx[0]==="entregado"?{status:"entregado",deliveredAt:serverTimestamp()}:{status:nx[0]})};f.append(b)}
   c.append(f);if(owner)c.append(delBtn(o));return c;
 }
 
@@ -253,20 +269,64 @@ CARTA.forEach(g=>g.i.forEach(it=>{const m=Math.min(...(it.z?it.z.map(z=>z[1]):[i
 const cups=o=>{let v=0,l=0;(o.items||[]).forEach(i=>{const t=i.opt||"";if(/lata/i.test(t))l+=i.q;else if(/oz/i.test(t))v+=i.q});return [v,l]};
 const sumCups=list=>list.reduce((s,o)=>{const c=cups(o);return [s[0]+c[0],s[1]+c[1]]},[0,0]);
 const saleSave=o=>addDoc(collection(db,"orders"),{...o,day:today(),createdAt:serverTimestamp()});
+/* ---------- Tarjeta de lealtad ---------- */
+const NOND=/^(Rol|Brownie|Galleta|Pan de muerto|Deli|Costo de envío)/;
+const isDr=i=>i.b!=null?!!i.b:!NOND.test(i.name||"");
+const drinksOf=items=>(items||[]).reduce((a,i)=>a+(isDr(i)&&(i.p>0||i.regalo)?(i.q||1):0),0);
+const calc=(n,d)=>({f:Math.floor((n+d)/10),nn:(n+d)%10});
+const whoIs=()=>owner?"Patrón":"Empleado";
+const ph10=t=>String(t||"").replace(/\D/g,"").slice(-10);
+const cheapest=items=>{let b=null;(items||[]).forEach(i=>{if(isDr(i)&&i.p>0&&(!b||i.p<b.p))b=i});return b};
+function giftify(items){const its=items.map(i=>({...i})),ch=cheapest(its);if(!ch)return{items:its,gift:0};const g=ch.p;
+  if(ch.q>1){ch.q-=1;its.push({...ch,q:1,p:0,regalo:g})}else{ch.regalo=g;ch.p=0}return{items:its,gift:g}}
+const cool=c=>!owner&&c&&c.last&&c.last.toMillis&&Date.now()-c.last.toMillis()<120000;
+async function findCards(txt){const t=String(txt||"").trim(),c=collection(db,"clientes");let q1;
+  if(/^ANEA-[A-Za-z0-9]{10}$/.test(t))q1=query(c,where("code","==",t),limit(3));
+  else{const d=ph10(t);if(d.length!==10)return null;q1=query(c,where("phone","==",d),limit(5))}
+  const s=await getDocs(q1);return s.docs.map(d=>({id:d.id,...d.data()}))}
+let jsqrP=null;const loadJsQR=()=>jsqrP||(jsqrP=new Promise((ok,no)=>{if(window.jsQR)return ok();const e=document.createElement("script");e.src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";e.onload=()=>window.jsQR?ok():no();e.onerror=no;document.head.append(e)}));
+/* lector de QR: cámara + búsqueda por teléfono. onCards(lista de tarjetas) */
+function scanner(onCards){const w=document.createElement("div");
+  w.innerHTML='<button type="button" class="go scb">📷 Escanear tarjeta de la clienta</button><video class="scv" playsinline muted hidden></video><p class="nt sce"></p><div class="frow"><input class="scp" inputmode="tel" placeholder="o escribe su teléfono (10 dígitos)"><button type="button" class="scs">Buscar</button></div>';
+  const bt=w.querySelector(".scb"),vd=w.querySelector(".scv"),er=w.querySelector(".sce"),inp=w.querySelector(".scp");let stream=null,timer=null,busy=false;
+  const stop=()=>{if(timer)clearInterval(timer);timer=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;vd.hidden=true;vd.srcObject=null;bt.textContent="📷 Escanear tarjeta de la clienta"};
+  const lookup=async t=>{er.textContent="Buscando…";try{const r=await findCards(t);if(r===null){er.textContent="Escribe los 10 dígitos del teléfono (o escanea el QR).";return}
+      if(!r.length){er.textContent="No encontramos esa tarjeta.";return}er.textContent="";onCards(r)}catch(e){er.textContent="No se pudo buscar. Revisa tu internet."}};
+  bt.onclick=async()=>{if(stream){stop();return}er.textContent="";
+    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});vd.srcObject=stream;vd.hidden=false;await vd.play();bt.textContent="✕ Cerrar cámara";
+      let det=null;if("BarcodeDetector" in window){try{det=new BarcodeDetector({formats:["qr_code"]})}catch(e){det=null}}
+      if(!det){try{await loadJsQR()}catch(e){er.textContent="No se pudo cargar el lector. Escribe el teléfono de la clienta.";stop();return}}
+      const cv=document.createElement("canvas"),cx=cv.getContext("2d",{willReadFrequently:true});
+      timer=setInterval(async()=>{if(busy||!stream||vd.readyState<2)return;busy=true;let txt="";
+        try{if(det){const r=await det.detect(vd);txt=r[0]&&r[0].rawValue||""}else{cv.width=vd.videoWidth;cv.height=vd.videoHeight;cx.drawImage(vd,0,0);const im=cx.getImageData(0,0,cv.width,cv.height),r=window.jsQR(im.data,im.width,im.height);txt=r&&r.data||""}}catch(e){}
+        busy=false;if(/^ANEA-[A-Za-z0-9]{10}$/.test(txt)){stop();lookup(txt)}},300)}
+    catch(e){er.textContent="No se pudo abrir la cámara. Dale permiso en el navegador o escribe el teléfono.";stop()}};
+  w.querySelector(".scs").onclick=()=>lookup(inp.value);inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();lookup(inp.value)}};
+  return{el:w,stop}}
+function needCard(uid){const c=cardCache[uid];if(c)return c.loading?null:c.d;cardCache[uid]={loading:true};getDoc(doc(db,"clientes",uid)).then(s=>{cardCache[uid]={d:s.exists()?{id:s.id,...s.data()}:null};if(!typing())render()}).catch(()=>{delete cardCache[uid]});return null}
+async function deliverWithCard(o){try{const cs=await getDoc(doc(db,"clientes",o.tarjeta));if(!cs.exists())throw 0;const c={id:cs.id,...cs.data()},n0=c.n||0,d=drinksOf(o.items),{f,nn}=calc(n0,d);
+    if(d===0||cool(c)){await updateDoc(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp()});if(d>0)alert("Entregado, pero NO se sumaron sellos: a esta clienta ya se le selló hace menos de 2 minutos. Avisa al patrón si hace falta.");return}
+    const g=f?giftify(o.items):{items:o.items,gift:0},b=writeBatch(db);
+    b.update(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp(),items:g.items,total:(o.total||0)-g.gift,sellos:{add:d-f,from:n0,to:nn,gift:f}});
+    b.update(doc(db,"clientes",c.id),{n:nn,gifts:(c.gifts||0)+f,last:serverTimestamp()});
+    b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:whoIs(),add:d-f,dr:d,g:f,k:"entrega"});
+    await b.commit();delete cardCache[o.tarjeta]}
+  catch(e){try{await updateDoc(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp()});alert("Pedido entregado, pero no se pudieron sumar los sellos de la tarjeta. Avisa al patrón.")}catch(x){alert("No se pudo marcar como entregado. Revisa tu internet e intenta de nuevo.")}}}
 let tcart=[];
 function sel(label,opts,on){const l=document.createElement("label");l.className="f";l.textContent=label;const s=document.createElement("select");opts.forEach(([v,t,d])=>{const o=document.createElement("option");o.value=v;o.textContent=t;if(d)o.disabled=true;s.append(o)});if(on)s.onchange=on;l.append(s);return [l,s]}
 function openSale(){
   const b=$("#tbody");b.innerHTML="";
   const h=document.createElement("h3");h.textContent="Nueva venta de tienda";
-  const items=[];CARTA.forEach(g=>g.i.forEach(x=>{x._k=g.c+"|"+x.n;items.push(x)}));
-  const sc=sel("Producto",items.map((x,i)=>[i,x.n+(x.h?" (caliente)":"")+(off.has(x._k)?" — AGOTADO":""),off.has(x._k)]),()=>draw());
+  const items=[];const buildItems=()=>{items.length=0;CARTA.forEach(g=>g.i.forEach(x=>{x._k=g.c+"|"+x.n;items.push(x)}));otros.forEach(o=>items.push({n:o.n,p:o.p,b:o.b||0,x:1,_o:1,_k:"o|"+o.n}));items.push({n:"➕ Otro producto…",x:1,p:0,_other:1,_k:"o|new"})};buildItems();
+  const optsOf=()=>items.map((x,i)=>[i,(x._o?"★ ":"")+x.n+(x._o?" · "+money(x.p):"")+(x.h?" (caliente)":"")+(off.has(x._k)?" — AGOTADO":""),off.has(x._k)]);
+  const sc=sel("Producto",optsOf(),()=>{qty.value="1";draw()});
   {const fe=[...sc[1].options].findIndex(o=>!o.disabled);if(fe>0)sc[1].selectedIndex=fe}
   const bx=document.createElement("div"),pv=document.createElement("b"),S={};
   const ql=document.createElement("label"),qty=document.createElement("input");ql.className="f";ql.textContent="Cantidad";qty.type="number";qty.min="1";qty.value="1";ql.append(qty);
   const add=document.createElement("button"),list=document.createElement("div"),nm=document.createElement("input"),reg=document.createElement("button"),cx=document.createElement("button");
   add.className="go";add.textContent="Agregar a la cuenta";reg.className="go";cx.className="csv";cx.textContent="Cancelar";nm.placeholder="Nombre del cliente (opcional)";
   const it=()=>items[+sc[1].value];
-  const price=()=>{const x=it();return (x.z?x.z.find(z=>z[0]===S.z.value)[1]:x.p)+(S.f&&S.f.value&&!x.fi?10:0)+(S.s&&S.s.value?10:0)+(S.pm&&S.pm.value?30:0)};
+  const price=()=>{const x=it();if(x._other)return Math.round((parseFloat(S.pr&&S.pr.value)||0)*100)/100;return (x.z?x.z.find(z=>z[0]===S.z.value)[1]:x.p)+(S.f&&S.f.value&&!x.fi?10:0)+(S.s&&S.s.value?10:0)+(S.pm&&S.pm.value?30:0)};
   const nTp=()=>{const x=it();if(!x.tp||!S.z)return 0;const z=x.z.find(z=>z[0]===S.z.value);return z&&z[2]||0};
   const picked=()=>[...bx.querySelectorAll("input.tp:checked")].map(e=>e.value);
   const upd=()=>{const w=bx.querySelector("#tpw"),n=nTp();
@@ -274,6 +334,8 @@ function openSale(){
     pv.textContent="Precio por pieza: "+money(price())};
   function draw(){
     const x=it();bx.innerHTML="";Object.keys(S).forEach(k=>delete S[k]);
+    if(x._other){const l1=document.createElement("label");l1.className="f";l1.textContent="Nombre del producto";const n1=document.createElement("input");n1.maxLength=40;n1.placeholder="Ej. Café de olla";l1.append(n1);const l2=document.createElement("label");l2.className="f";l2.textContent="Precio ($)";const n2=document.createElement("input");n2.type="number";n2.inputMode="decimal";n2.min="1";n2.placeholder="Ej. 45";n2.oninput=upd;l2.append(n2);S.nm=n1;S.pr=n2;bx.append(l1,l2);const l3=document.createElement("label");l3.className="f";l3.textContent="¿Cuenta como bebida para los sellos?";const n3=document.createElement("select");[["0","No (es otro producto)"],["1","Sí, es una bebida"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;n3.append(o)});l3.append(n3);S.b=n3;bx.append(l3);const sv=document.createElement("p");sv.className="nt";sv.textContent="Al agregarlo, queda guardado en la lista con su precio para la próxima vez.";bx.append(sv);upd();return}
+    if(x._o&&owner){const rm=document.createElement("button");rm.type="button";rm.className="csv";rm.textContent="Quitar este producto de la lista";rm.onclick=async()=>{if(!confirm("¿Quitar «"+x.n+"» de la lista de productos?"))return;try{await saveOtros(otros.filter(o=>o.n!==x.n));otros=otros.filter(o=>o.n!==x.n);refill(-1)}catch(e){alert("No se pudo quitar. Revisa tu internet.")}};bx.dataset.rm="1";setTimeout(()=>bx.append(rm))}
     const ad=(k,t,o)=>{const [l,s]=sel(t,o,upd);S[k]=s;bx.append(l)};
     if(x.v)ad("v","Sabor",x.v.map(v=>[v,v]));
     if(x.z)ad("z",x.zl||"Tamaño",x.z.map(([t,p])=>[t,`${t} · ${money(p)}`]));
@@ -289,16 +351,53 @@ function openSale(){
     list.innerHTML="";let t=0;
     tcart.forEach((l,i)=>{t+=l.p*l.q;const r=row(`${l.q} × ${l.name}${l.opt?" ("+l.opt+")":""}`,money(l.p*l.q)),x=document.createElement("button");x.textContent="✕";x.onclick=()=>{tcart.splice(i,1);paint()};r.append(x);list.append(r)});
     reg.textContent="Registrar venta · "+money(t);reg.hidden=!tcart.length;
+    lyPaint(t);
   }
-  add.onclick=()=>{const x=it();if(nTp()&&picked().length!==nTp()){alert("Elige "+nTp()+" toppings.");return}const parts=[S.z&&S.z.value,picked().length&&"toppings: "+picked().join(", "),S.f&&S.f.value&&"cloud foam de "+S.f.value,S.s&&S.s.value&&"shot de espresso",S.pm&&S.pm.value&&"con pan de muerto",S.l&&S.l.value&&"leche "+S.l.value.toLowerCase()].filter(Boolean);
-    tcart.push({name:x.n+(x.h?" caliente":"")+(S.v?" "+S.v.value:""),opt:parts.join(", "),p:price(),q:Math.max(1,parseInt(qty.value)||1)});paint()};
-  reg.onclick=async()=>{reg.disabled=true;try{await saleSave({name:nm.value.trim()||"Mostrador",dest:"Tienda",origen:"tienda",phone:"",note:"",status:"entregado",items:tcart.map(l=>({...l})),total:tcart.reduce((s,l)=>s+l.p*l.q,0)});tcart=[];$("#tienda").close()}catch(e){alert("No se pudo guardar la venta. Revisa tu internet e intenta de nuevo.")}reg.disabled=false};
+  let card=null,scn=null;
+  const ly=document.createElement("div");ly.className="lyb";
+  function lyPaint(t){const g0=t==null?tcart.reduce((s,l)=>s+l.p*l.q,0):t;ly.innerHTML="";const hd=document.createElement("div");hd.className="lyh";hd.textContent="🎁 Tarjeta de lealtad (opcional)";ly.append(hd);
+    if(!card){if(!scn){scn=scanner(rs=>{if(rs.length>1){pickList(rs);return}setCard(rs[0])})}ly.append(scn.el);return}
+    const w=document.createElement("div");w.className="lyw";w.innerHTML="";const nmE=document.createElement("div");nmE.className="lyn";nmE.textContent="✓ Cliente: "+card.name;w.append(nmE);
+    const no=document.createElement("button");no.type="button";no.className="lk";no.textContent="no es ella";no.onclick=()=>{card=null;nm.value="";nm.readOnly=false;lyPaint()};
+    const d=drinksOf(tcart),{f,nn}=calc(card.n||0,d),dots=document.createElement("div");dots.className="dots";
+    for(let i=1;i<=10;i++){const e=document.createElement("i");if(i===10){e.className="g"+(f?" f":"");e.textContent="🎁"}else if(f){e.className=i<=nn?"f":"";e.textContent=i<=nn?"♥":i}else if(i<=card.n){e.className="f";e.textContent="♥"}else if(i<=nn){e.className="nw";e.textContent="+"}else e.textContent=i;dots.append(e)}
+    const inf=document.createElement("div");inf.className="lyi";const ch=cheapest(tcart);
+    if(f&&ch){inf.innerHTML="";const a=document.createElement("div");a.className="lyg";a.textContent=`🎁 ¡Bebida GRATIS! La bebida 10 de su tarjeta va gratis: ${ch.name} · −$${ch.p} (no se cobra)`;inf.append(a)}
+    const sm=document.createElement("div");sm.className="lyx";sm.textContent=!tcart.length?`Tiene ${card.n||0} de 9 sellos.`:d===0?"Esta venta no tiene bebidas: no suma sellos.":f?`Tarjeta nueva · queda en ${nn} de 10`:`Suma ${d} ${d===1?"sello":"sellos"} · queda en ${nn} de 10`+(nn>=9?" · 🎁 su próxima bebida es gratis":"");inf.append(sm);
+    if(cool(card)){const c2=document.createElement("div");c2.className="lyw2";c2.textContent="⚠ A esta clienta ya se le selló hace menos de 2 minutos. La venta se guardará SIN sellos. Si hace falta, avisa al patrón.";inf.append(c2)}
+    w.append(dots,inf,no);ly.append(w);
+    if(f&&ch){const net=Math.max(0,g0-ch.p);reg.textContent=net>0?`Registrar venta · COBRAR ${money(net)} · 🎁 −${money(ch.p)} gratis`:"Registrar venta · 🎁 gratis, no cobrar"}}
+  function setCard(c){card=c;nm.value=c.name;nm.readOnly=true;if(scn)scn.stop();lyPaint()}
+  function pickList(rs){ly.innerHTML="";const h=document.createElement("div");h.className="lyh";h.textContent="Hay varias tarjetas con ese teléfono. ¿Cuál es?";ly.append(h);rs.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="csv";b.textContent=c.name+" · "+(c.n||0)+" sellos";b.onclick=()=>setCard(c);ly.append(b)})}
+  const refill=idx=>{buildItems();const s=sc[1];s.innerHTML="";optsOf().forEach(([v,t,d])=>{const o=document.createElement("option");o.value=v;o.textContent=t;if(d)o.disabled=true;s.append(o)});s.value=String(idx>=0?idx:items.length-1);draw()};
+  add.onclick=async()=>{const x=it();
+    if(x._other){const nm2=S.nm.value.trim(),pr=price();if(!nm2||!(pr>0)){alert("Escribe el nombre y el precio del producto.");return}
+      const bb=S.b&&S.b.value==="1"?1:0;tcart.push({name:nm2,opt:"",p:pr,q:Math.max(1,parseInt(qty.value)||1),b:bb});paint();
+      const lst=otros.filter(o=>o.n.toLowerCase()!==nm2.toLowerCase());lst.push({n:nm2,p:pr,b:bb});try{await saveOtros(lst);otros=lst}catch(e){}
+      refill(-1);qty.value="1";return}
+    if(nTp()&&picked().length!==nTp()){alert("Elige "+nTp()+" toppings.");return}const parts=[S.z&&S.z.value,picked().length&&"toppings: "+picked().join(", "),S.f&&S.f.value&&"cloud foam de "+S.f.value,S.s&&S.s.value&&"shot de espresso",S.pm&&S.pm.value&&"con pan de muerto",S.l&&S.l.value&&"leche "+S.l.value.toLowerCase()].filter(Boolean);
+    tcart.push({name:x.n+(x.h?" caliente":"")+(S.v?" "+S.v.value:""),opt:parts.join(", "),p:price(),q:Math.max(1,parseInt(qty.value)||1),...(x._o?{b:x.b||0}:{})});qty.value="1";paint()};
+  reg.onclick=async()=>{reg.disabled=true;
+    const base={dest:"Tienda",origen:"tienda",phone:"",note:"",status:"entregado"},items0=tcart.map(l=>({...l})),gross=items0.reduce((s,l)=>s+l.p*l.q,0);
+    try{
+      if(!card){await saleSave({...base,name:nm.value.trim()||"Mostrador",items:items0,total:gross})}
+      else{const d=drinksOf(items0),n0=card.n||0,{f,nn}=calc(n0,d);
+        if(d===0||cool(card)){await saleSave({...base,name:card.name,tarjeta:card.id,items:items0,total:gross});if(d>0)alert("Venta registrada, pero NO se sumaron sellos: a esta clienta ya se le selló hace menos de 2 minutos.")}
+        else{const g=f?giftify(items0):{items:items0,gift:0},ref=doc(collection(db,"orders")),b=writeBatch(db);
+          b.set(ref,{...base,name:card.name,tarjeta:card.id,items:g.items,total:gross-g.gift,day:today(),createdAt:serverTimestamp()});
+          b.update(doc(db,"clientes",card.id),{n:nn,gifts:(card.gifts||0)+f,last:serverTimestamp()});
+          b.set(doc(collection(db,"sellos")),{cid:card.id,name:card.name,day:today(),t:serverTimestamp(),who:whoIs(),add:d-f,dr:d,g:f,k:"venta"});
+          try{await b.commit()}catch(e){await saleSave({...base,name:card.name,tarjeta:card.id,items:items0,total:gross});alert("Venta registrada, pero NO se pudieron sumar los sellos ni la bebida gratis. Cóbrala completa y avisa al patrón.")}}}
+      tcart=[];$("#tienda").close()}
+    catch(e){alert("No se pudo guardar la venta. Revisa tu internet e intenta de nuevo.")}
+    reg.disabled=false};
   cx.onclick=()=>$("#tienda").close();
-  b.append(h,sc[0],bx,pv,ql,add,list,nm,reg,cx);draw();paint();
+  b.append(h,sc[0],bx,pv,ql,add,list,ly,nm,reg,cx);draw();paint();$("#tienda").addEventListener("close",()=>{if(scn)scn.stop()},{once:true});
   $("#tienda").showModal();
 }
 function renderCorte(L,list,cash){
   const tn=list.filter(o=>o.origen==="tienda"),wn=list.filter(o=>o.origen!=="tienda");
+  const gift=o=>(o.items||[]).reduce((s,i)=>s+(i.regalo||0)*(i.q||1),0),gfN=list.reduce((s,o)=>s+(o.items||[]).reduce((a,i)=>a+(i.regalo?i.q||1:0),0),0),gf=list.reduce((s,o)=>s+gift(o),0);
   const env=o=>(o.items||[]).filter(i=>i.name==="Costo de envío").reduce((s,i)=>s+i.q*i.p,0);
   const sm=(a,f)=>a.reduce((s,o)=>s+f(o),0),tot=o=>o.total||0,prod=o=>tot(o)-env(o);
   const tT=sm(tn,tot),wP=sm(wn,prod),eN=wn.filter(o=>env(o)>0),eT=sm(wn,env),all=sm(list,tot);
@@ -310,8 +409,10 @@ function renderCorte(L,list,cash){
   const big=box("Total vendido hoy"),n=document.createElement("div");
   n.style.cssText="font-size:2.4rem;font-weight:700;line-height:1.1";n.textContent=money(all);big.append(n);
   const sub=document.createElement("div");sub.style.cssText="color:var(--muted);margin-top:4px";
-  sub.textContent=`${list.length} ${list.length===1?"venta":"ventas"} · entregado hoy ${money(dn)}`+(pend?` · por entregar ${money(pend)}`:"");big.append(sub);L.append(big);
-  lines.push(`Total vendido: ${money(all)} (entregado ${money(dn)}, por entregar ${money(pend)})`);
+  sub.textContent=`${list.length} ${list.length===1?"venta":"ventas"} · entregado hoy ${money(dn)}`+(pend?` · por entregar ${money(pend)}`:"");big.append(sub);
+  if(gf>0){const g=document.createElement("div");g.className="gf";g.textContent=`🎁 Regalado hoy: ${money(gf)} (${gfN} ${gfN===1?"bebida gratis":"bebidas gratis"} de tarjeta de lealtad) · no suma al total`;big.append(g)}
+  L.append(big);
+  lines.push(`Total vendido: ${money(all)} (entregado ${money(dn)}, por entregar ${money(pend)})`);if(gf>0)lines.push(`Regalado (no suma): ${money(gf)} · ${gfN} bebida(s) gratis de tarjeta`);
   // 2) Caja
   const cj=box("Caja"),fr=document.createElement("div");fr.className="frow";
   const inp=document.createElement("input");inp.type="number";inp.inputMode="decimal";inp.min="0";inp.placeholder="¿Cuánto había en caja al empezar el turno?";inp.value=cajaFondo==null?"":cajaFondo;
@@ -336,6 +437,7 @@ function renderCorte(L,list,cash){
   const t=document.createElement("table");t.className="tb";t.style.marginTop="10px";t.append(head(["Concepto","Cant.","Importe"]));
   const r=(a,b,c,cls)=>{const x=document.createElement("tr");if(cls)x.className=cls;x.append(td(a),td(b,"n"),td(c,"n"));t.append(x)};
   r("Ventas de tienda",tn.length,money(tT));r("Pedidos en línea (productos)",wn.length,money(wP));r("Envíos cobrados",eN.length,money(eT));r("TOTAL DEL DÍA",list.length,money(all),"tot");
+  if(gf>0){const x=document.createElement("tr");x.style.cssText="color:#2f7d3b;font-weight:700";x.append(td("🎁 Regalado (no suma al total)"),td(gfN,"n"),td(money(gf),"n"));t.append(x)}
   r("Vasos vendidos",cc[0],"");r("Latas vendidas",cc[1],"");r("Helados suaves",hel,"");
   const w=document.createElement("div");w.className="tw";w.append(t);dt.append(w);L.append(dt);
   const cp=document.createElement("button");cp.className="csv";cp.textContent="Copiar corte";
@@ -364,19 +466,20 @@ function render(){
   $("#cnt").textContent=act.length?`${act.length} por atender`:"";
   $("#rol").textContent=owner?"Patrón":"Empleado";
   $("#tM").textContent=off.size?`Agotados (${off.size})`:"Agotados";
-  $("#tH").hidden=!owner;$("#tS").hidden=!owner;
+  $("#tH").hidden=!owner;$("#tS").hidden=!owner;$("#tK").hidden=!owner;
   const L=$("#list");L.innerHTML="";
   if(tab==="T"){renderTienda(L,hoy.filter(o=>o.origen==="tienda"),hoy);return}
   if(tab==="C"){renderCorte(L,hoy,cash);return}
   if(tab==="M"){renderMenu(L);return}
   if(tab==="S"&&owner){renderStock(L);return}
+  if(tab==="K"&&owner){renderClientas(L);return}
   if(tab==="H"&&owner){const per_=orders.filter(inPer);renderStats(L,per_);if(per==="1")renderCorte(L,per_,cash);renderTable(L,per_);return}
   const arr=tab==="D"?done:act;
   if(!arr.length){const p=document.createElement("p");p.className="empty";p.textContent="Sin pedidos";L.append(p);return}
   segCards(L,arr,tab!=="D",tab!=="D"?" por atender":"");
 }
-function tabs(k){tab=k;["A","D","T","C","M","H","S"].forEach(j=>$("#t"+j).className=j===k?"on":"");render()}
-["A","D","T","C","M","H","S"].forEach(k=>$("#t"+k).onclick=()=>tabs(k));
+function tabs(k){tab=k;["A","D","T","C","M","H","S","K"].forEach(j=>$("#t"+j).className=j===k?"on":"");render()}
+["A","D","T","C","M","H","S","K"].forEach(k=>$("#t"+k).onclick=()=>tabs(k));
 function start(){
   if(unsub)unsub();if(unsub2)unsub2();unsub2=null;first=true;f2=true;partA=[];partB=[];qDay=today();startCaja();
   const c=collection(db,"orders"),err=e=>{$("#list").textContent="No se pudieron leer los pedidos ("+e.code+")"};
@@ -391,6 +494,47 @@ function start(){
   else{unsub=watch(query(c,where("day","==",qDay)),true);unsub2=watch(query(c,where("day","==",mx(Date.now()-864e5))),false)}
 }
 function startOff(){if(unsubO)unsubO();unsubO=onSnapshot(doc(db,"config","agotados"),s=>{off=new Set(s.exists()?(s.data().off||[]):[]);if(tab!=="S"&&!typing())render()},e=>{})}
+function startOtros(){if(unsubX)unsubX();unsubX=onSnapshot(doc(db,"config","otros"),s=>{otros=s.exists()?(s.data().items||[]).filter(o=>o&&o.n&&o.p>0):[]},e=>{})}
+async function saveOtros(list){await setDoc(doc(db,"config","otros"),{items:list.slice(-60),updatedAt:serverTimestamp()},{merge:true})}
+function startClientes(){if(unsubK)unsubK();if(unsubL)unsubL();unsubK=unsubL=null;clientes=[];sellos=[];if(!owner)return;
+  unsubK=onSnapshot(query(collection(db,"clientes"),orderBy("name"),limit(1000)),s=>{clientes=s.docs.map(d=>({id:d.id,...d.data()}));if(tab==="K"&&!typing())render()},e=>{});
+  unsubL=onSnapshot(query(collection(db,"sellos"),orderBy("t","desc"),limit(1500)),s=>{sellos=s.docs.map(d=>({id:d.id,...d.data()}));if(tab==="K"&&!typing())render()},e=>{})}
+const tmOf=e=>e.t&&e.t.toDate?e.t.toDate().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit",hour12:false}):"";
+function lineE(e,showName){const li=document.createElement("li"),nmS=showName?` · ${e.name} · `:" · ";
+  if(e.k==="ajuste"){if(e.add<0){li.className="rmv";li.textContent=`${tmOf(e)}${nmS}➖ se quitaron ${-e.add} ${e.add===-1?"sello":"sellos"} (${e.who}) ⚠ revisar`}else{li.className="bd";li.textContent=`${tmOf(e)}${nmS}ajuste manual +${e.add} ${e.add===1?"sello":"sellos"} (${e.who}) ⚠ revisar`}return li}
+  const bad=e.add>e.dr-e.g;if(bad)li.className="bd";
+  li.textContent=`${tmOf(e)}${nmS}${e.dr} ${e.dr===1?"bebida":"bebidas"} · +${e.add} ${e.add===1?"sello":"sellos"}${e.g?" · 🎁 bebida gratis":""} (${e.who})${e.k==="entrega"?" · al entregar":""}${bad?" ⚠ más sellos que bebidas":""}`;return li}
+function dayBlocks(L,list,showName,openFirst){const g={};list.forEach(e=>{(g[e.day]=g[e.day]||[]).push(e)});
+  Object.keys(g).sort().reverse().forEach((d,k)=>{const es=g[d],vs=es.filter(e=>e.k!=="ajuste"),dr=vs.reduce((a,e)=>a+e.dr,0),ad=vs.reduce((a,e)=>a+e.add,0),gf=vs.reduce((a,e)=>a+e.g,0),rm=es.filter(e=>e.k==="ajuste"&&e.add<0).reduce((a,e)=>a-e.add,0),pl=es.filter(e=>e.k==="ajuste"&&e.add>0).reduce((a,e)=>a+e.add,0),bad=ad>dr-gf||pl>0;
+    const dt=document.createElement("details");dt.className="dy";if(openFirst&&k===0)dt.open=true;const su=document.createElement("summary");
+    const cell=(t,c)=>{const x=document.createElement("span");x.textContent=t;if(c)x.className=c;su.append(x)};cell(dayLabel(d));cell(`${vs.length} ${vs.length===1?"visita":"visitas"}`);cell(`${dr} bebidas`);cell(`${ad} sellos${bad?" ⚠":""}`,bad?"bd":"");
+    if(gf)cell(`🎁 ${gf} ${gf===1?"bebida regalada":"bebidas regaladas"}`,"gr2");if(rm)cell(`➖ ${rm} quitados ⚠`,"rmv2");if(pl)cell(`➕ ${pl} sumados a mano ⚠`,"rmv2");
+    const ul=document.createElement("ul");es.sort((a,b)=>(b.t&&b.t.toMillis?b.t.toMillis():0)-(a.t&&a.t.toMillis?a.t.toMillis():0)).forEach(e=>ul.append(lineE(e,showName)));dt.append(su,ul);L.append(dt)})}
+function renderClientas(L){
+  if(kSel){const c=clientes.find(x=>x.id===kSel);if(c){renderClienta(L,c);return}kSel=null}
+  const p=box("Historial de clientas");const h=document.createElement("p");h.style.cssText="margin:0 0 8px;color:var(--muted)";h.textContent="Por día: toca un día para ver quién, a qué hora y cuántos sellos. Rojo = más sellos que bebidas. Amarillo = sellos quitados.";p.append(h);L.append(p);
+  if(!sellos.length){const e=document.createElement("p");e.className="empty";e.textContent="Aún no hay movimientos de tarjetas";L.append(e)}else dayBlocks(L,sellos,true,true);
+  const q=box("Clientas con tarjeta ("+clientes.length+")"),f=document.createElement("input");f.className="kfl";f.placeholder="Buscar por nombre o teléfono";f.value=kQ;q.append(f);
+  const tb=document.createElement("table");tb.className="tb";tb.append(head(["Clienta","Visitas","Bebidas","Gratis","Sellos"]));
+  const by={};sellos.forEach(e=>{const x=by[e.cid]=by[e.cid]||{v:0,d:0};if(e.k!=="ajuste"){x.v++;x.d+=e.dr}});
+  const draw=()=>{[...tb.querySelectorAll("tr.kc")].forEach(r=>r.remove());const t=kQ.trim().toLowerCase(),d=kQ.replace(/\D/g,"");
+    clientes.filter(c=>!t||c.name.toLowerCase().includes(t)||(d&&(c.phone||"").includes(d))).forEach(c=>{const x=by[c.id]||{v:0,d:0},r=document.createElement("tr");r.className="kc";r.append(td(c.name+" · "+(c.phone||"")),td(x.v,"n"),td(x.d,"n"),td(c.gifts?"🎁 "+c.gifts:"—","n"),td((c.n||0)+"/10"+((c.n||0)>=9?" 🎁":""),"n"));r.onclick=()=>{kSel=c.id;kT=null;render()};tb.append(r)})};
+  f.oninput=()=>{kQ=f.value;draw()};draw();const w=document.createElement("div");w.className="tw";w.append(tb);q.append(w);L.append(q)}
+function renderClienta(L,c){const n=c.n||0;if(kT==null)kT=n;const p=box(c.name);
+  const bk=document.createElement("button");bk.className="csv";bk.textContent="← Volver a la lista";bk.onclick=()=>{kSel=null;kT=null;render()};L.append(bk);
+  const ln=document.createElement("p");ln.style.cssText="margin:0 0 6px;color:var(--muted)";ln.textContent=`${c.phone||""} · ${c.code||""}`;p.append(ln);
+  const mine=sellos.filter(e=>e.cid===c.id),vs=mine.filter(e=>e.k!=="ajuste");
+  p.append(row("Sellos",n+" de 10"),row("Visitas",vs.length),row("Bebidas",vs.reduce((a,e)=>a+e.dr,0)));
+  const gf=document.createElement("div");gf.className="lyg";gf.textContent=`🎁 Bebidas gratis: ${c.gifts||0} · tarjeta reiniciada ${c.gifts||0} ${(c.gifts||0)===1?"vez":"veces"}`;p.append(gf);
+  const ed=document.createElement("div");ed.style.marginTop="12px";const th=document.createElement("b");th.textContent="Editar sellos (solo patrón)";ed.append(th);
+  const pk=document.createElement("div");pk.className="kpk";
+  for(let i=1;i<=10;i++){let el;if(i===10){el=document.createElement("span");el.className="g";el.textContent="🎁"}else{el=document.createElement("button");el.type="button";let cl="",t=i;if(i<=n&&i<=kT){cl="f";t="♥"}else if(i>n&&i<=kT){cl="nw";t="+"}else if(i<=n&&i>kT){cl="rm";t="✕"}el.className=cl;el.textContent=t;el.onclick=()=>{kT=(i===kT)?i-1:i;render()}}pk.append(el)}
+  const msg=document.createElement("div");msg.style.cssText="margin:4px 0 8px;font-weight:700";const dd=kT-n;msg.textContent=dd>0?`Se suman ${dd} · quedará en ${kT} de 10`:dd<0?`Se quitan ${-dd} · quedará en ${kT} de 10`:"Sin cambios";
+  const sv=document.createElement("button");sv.className="go";sv.textContent="Guardar cambio de sellos";sv.disabled=dd===0;
+  sv.onclick=async()=>{sv.disabled=true;try{const b=writeBatch(db);b.update(doc(db,"clientes",c.id),{n:kT,last:serverTimestamp()});b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:"Patrón",add:dd,dr:0,g:0,k:"ajuste"});await b.commit();kT=null}catch(e){alert("No se pudo guardar. Revisa tu internet e intenta de nuevo.");sv.disabled=false}};
+  ed.append(pk,msg,sv);p.append(ed);L.append(p);
+  const h=document.createElement("p");h.style.cssText="margin:12px 0 6px;font-weight:700";h.textContent="Historial por día";L.append(h);
+  if(!mine.length){const e=document.createElement("p");e.className="empty";e.textContent="Sin movimientos todavía";L.append(e)}else dayBlocks(L,mine,false,true)}
 function startCaja(){if(unsubC)unsubC();cajaFondo=null;unsubC=onSnapshot(doc(db,"caja",today()),s=>{cajaFondo=s.exists()&&typeof s.data().fondo==="number"?s.data().fondo:null;if(tab!=="S"&&!typing())render()},e=>{})}
 function startStock(){if(unsubS)unsubS();unsubS=null;stock=[];if(!owner)return;unsubS=onSnapshot(query(collection(db,"stock"),orderBy("name")),s=>{stock=s.docs.map(d=>({id:d.id,...d.data()}));if(tab==="S")render()},e=>{})}
 async function awake(){try{await navigator.wakeLock.request("screen")}catch(e){}}
@@ -400,10 +544,10 @@ onAuthStateChanged(auth,u=>{
   $("#login").hidden=!!u;$("#app").hidden=!u;
   if(u){
     owner=(u.email||"").toLowerCase()===OWNER.toLowerCase();
-    if(!owner&&(tab==="H"||tab==="S"))tab="A";
-    ["A","D","T","C","M","H","S"].forEach(j=>$("#t"+j).className=j===tab?"on":"");
-    start();startStock();startOff();awake();$("#snd").hidden=!!ctx&&ctx.state==="running";render();
-  }else{if(unsub)unsub();if(unsub2)unsub2();unsub2=null;partA=[];partB=[];if(unsubS)unsubS();if(unsubO)unsubO();if(unsubC)unsubC();unsub=null;unsubS=null;unsubO=null;unsubC=null;orders=[];stock=[];off=new Set();cajaFondo=null}
+    if(!owner&&(tab==="H"||tab==="S"||tab==="K"))tab="A";
+    ["A","D","T","C","M","H","S","K"].forEach(j=>$("#t"+j).className=j===tab?"on":"");
+    start();startStock();startOff();startOtros();startClientes();awake();$("#snd").hidden=!!ctx&&ctx.state==="running";render();
+  }else{if(unsub)unsub();if(unsub2)unsub2();unsub2=null;partA=[];partB=[];if(unsubS)unsubS();if(unsubO)unsubO();if(unsubC)unsubC();if(unsubX)unsubX();unsubX=null;otros=[];if(unsubK)unsubK();if(unsubL)unsubL();unsubK=unsubL=null;clientes=[];sellos=[];cardCache={};kSel=null;unsub=null;unsubS=null;unsubO=null;unsubC=null;orders=[];stock=[];off=new Set();cajaFondo=null}
 });
 $("#in").onclick=async()=>{
   $("#lerr").textContent="";audio();
