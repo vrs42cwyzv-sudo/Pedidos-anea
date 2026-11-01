@@ -533,6 +533,7 @@ function renderClienta(L,c){const n=c.n||0;if(kT==null)kT=n;const p=box(c.name);
   const sv=document.createElement("button");sv.className="go";sv.textContent="Guardar cambio de sellos";sv.disabled=dd===0;
   sv.onclick=async()=>{sv.disabled=true;try{const b=writeBatch(db);b.update(doc(db,"clientes",c.id),{n:kT,last:serverTimestamp()});b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:"Patrón",add:dd,dr:0,g:0,k:"ajuste"});await b.commit();kT=null}catch(e){alert("No se pudo guardar. Revisa tu internet e intenta de nuevo.");sv.disabled=false}};
   ed.append(pk,msg,sv);p.append(ed);L.append(p);
+  const dl=document.createElement("button");dl.className="csv";dl.style.marginTop="14px";dl.textContent="Eliminar esta tarjeta (duplicada o de prueba)";dl.onclick=async()=>{if(!confirm("¿Eliminar la tarjeta de "+c.name+"? No se puede deshacer."))return;try{await deleteDoc(doc(db,"clientes",c.id));kSel=null;kT=null;render()}catch(e){alert("No se pudo eliminar la tarjeta.")}};L.append(dl);
   const h=document.createElement("p");h.style.cssText="margin:12px 0 6px;font-weight:700";h.textContent="Historial por día";L.append(h);
   if(!mine.length){const e=document.createElement("p");e.className="empty";e.textContent="Sin movimientos todavía";L.append(e)}else dayBlocks(L,mine,false,true)}
 function startCaja(){if(unsubC)unsubC();cajaFondo=null;unsubC=onSnapshot(doc(db,"caja",today()),s=>{cajaFondo=s.exists()&&typeof s.data().fondo==="number"?s.data().fondo:null;if(tab!=="S"&&!typing())render()},e=>{})}
