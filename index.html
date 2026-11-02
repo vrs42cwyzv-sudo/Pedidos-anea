@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+.st{color:var(--pink-d);font-size:13px;line-height:1;margin-left:4px;vertical-align:1px}
+.item.tmp .st{color:#f4a560}
+.stleg{margin:6px 0 2px;color:var(--muted);font-size:13px}
 :root{--cream:#f5f0e8;--card:#fbf8f3;--pink:#e3c6cb;--pink-d:#d2a5ae;--rose:#b47a87;--ink:#3d2a2f;--muted:#7a6469;--line:#e2d6cf;color-scheme:only light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#f1dde0;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -156,11 +159,13 @@ const val=k=>{const e=$(`input[name=${k}]:checked`);return e?e.value:""};
 const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")&&!cur.fi?10:0)+(val("s")?10:0)+(val("pm")?30:0);
 const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0),units=()=>cart.reduce((s,x)=>s+x.q,0);
 
+$("#menu").insertAdjacentHTML("beforeend",'<p class="stleg"><span class="st">★</span> = esta bebida suma un sello (la bebida 10 es gratis)</p>');
 MENU.forEach(g=>{
   $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm"':""}>${g.c}</h2>`);
   g.i.forEach(it=>{
     const r=document.createElement("div");r.className="item"+(it.t?" tmp":"");
-    r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
+    const dr=!(g.c==="Snacks"||g.c==="Postres");
+    r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}${dr?' <span class="st" title="Suma un sello">★</span>':""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
     const key=g.c+"|"+it.n;ROWS.push({k:key,r});
     r.querySelector("button").onclick=()=>openCfg(it,key);
     $("#menu").append(r);

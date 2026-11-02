@@ -270,8 +270,10 @@ const cups=o=>{let v=0,l=0;(o.items||[]).forEach(i=>{const t=i.opt||"";if(/lata/
 const sumCups=list=>list.reduce((s,o)=>{const c=cups(o);return [s[0]+c[0],s[1]+c[1]]},[0,0]);
 const saleSave=o=>addDoc(collection(db,"orders"),{...o,day:today(),createdAt:serverTimestamp()});
 /* ---------- Tarjeta de lealtad ---------- */
-const NOND=/^(Rol|Brownie|Galleta|Pan de muerto|Deli|Costo de envío)/;
-const isDr=i=>i.b!=null?!!i.b:!NOND.test(i.name||"");
+// Solo cuentan estas bebidas (lista blanca). Todo lo demás (snacks, postres, envío, productos nuevos) NO cuenta.
+const DRK=/^(Latte|Pumpkin spice|Matcha|Americano|Chai latte|Taro|Moka|Chocolate|Oreo|Capuchino|Helado suave)/;
+// "Pan de muerto" de temporada es bebida (lleva leche); el pan de muerto de postres (sin leche) no cuenta
+const isDr=i=>i.b!=null?!!i.b:(DRK.test(i.name||"")||(/^Pan de muerto/.test(i.name||"")&&/leche/i.test(i.opt||"")));
 const drinksOf=items=>(items||[]).reduce((a,i)=>a+(isDr(i)&&(i.p>0||i.regalo)?(i.q||1):0),0);
 const calc=(n,d)=>({f:Math.floor((n+d)/10),nn:(n+d)%10});
 const whoIs=()=>owner?"Patrón":"Empleado";
