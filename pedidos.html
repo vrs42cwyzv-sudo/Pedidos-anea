@@ -239,6 +239,8 @@ const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
 const CARTA=[
+{c:"Nuevo",o:1,i:[
+ {n:"Strawberry matcha Anea",d:"Fresa natural · matcha ceremonial · miel de agave",z:[["16 oz",110],["Lata",120]]}]},
 {c:"De temporada",o:1,i:[
  {n:"Latte Lotus (Boo-tus)",d:"Bebida de temporada",z:[["16 oz",90],["Lata",100]],f:1,t:1},
  {n:"Pan de muerto",d:"Bebida de temporada",z:F,f:1,pm:1,t:1},
@@ -271,7 +273,7 @@ const sumCups=list=>list.reduce((s,o)=>{const c=cups(o);return [s[0]+c[0],s[1]+c
 const saleSave=o=>addDoc(collection(db,"orders"),{...o,day:today(),createdAt:serverTimestamp()});
 /* ---------- Tarjeta de lealtad ---------- */
 // Solo cuentan estas bebidas (lista blanca). Todo lo demás (snacks, postres, envío, productos nuevos) NO cuenta.
-const DRK=/^(Latte|Pumpkin spice|Matcha|Americano|Chai latte|Taro|Moka|Chocolate|Oreo|Capuchino|Helado suave)/;
+const DRK=/^(Strawberry matcha|Latte|Pumpkin spice|Matcha|Americano|Chai latte|Taro|Moka|Chocolate|Oreo|Capuchino|Helado suave)/;
 // "Pan de muerto" de temporada es bebida (lleva leche); el pan de muerto de postres (sin leche) no cuenta
 const isDr=i=>i.b!=null?!!i.b:(DRK.test(i.name||"")||(/^Pan de muerto/.test(i.name||"")&&/leche/i.test(i.opt||"")));
 const drinksOf=items=>(items||[]).reduce((a,i)=>a+(isDr(i)&&(i.p>0||i.regalo)?(i.q||1):0),0);

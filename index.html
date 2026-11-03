@@ -36,6 +36,9 @@ button{font:inherit;cursor:pointer}
 .item.tmp{background:rgba(244,160,80,.20);border-left:5px solid #e8883a;border-radius:10px;padding-left:12px;margin-top:6px;border-bottom:0}
 .item.tmp .pk{background:#f4a560}.item.tmp .pk:active{background:#e8883a}
 h2.tm{border-bottom-color:#e8883a;color:#a8480f}
+.item.rdx{background:rgba(214,60,70,.16);border-left:5px solid #c8323c;border-radius:10px;padding-left:12px;margin-top:6px;border-bottom:0}
+.item.rdx .pk{background:#d9525b;color:#fff}.item.rdx .pk:active{background:#c8323c}.item.rdx .st{color:#d9525b}
+h2.rd{border-bottom-color:#c8323c;color:#a3202a}
 .go{display:block;width:100%;padding:14px;margin-top:18px;text-align:center;text-decoration:none;font-size:1rem}
 .link{background:none;border:0;color:var(--muted);width:100%;padding:12px 0 0;text-decoration:underline}
 :focus-visible{outline:3px solid var(--rose);outline-offset:2px}
@@ -124,6 +127,8 @@ const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
 const MENU=[
+{c:"Nuevo",o:1,r:1,i:[
+ {n:"Strawberry matcha Anea",d:"Fresa natural · matcha ceremonial · miel de agave",z:[["16 oz",110],["Lata",120]],r:1}]},
 {c:"De temporada",o:1,i:[
  {n:"Latte Lotus (Boo-tus)",d:"Bebida de temporada",z:[["16 oz",90],["Lata",100]],f:1,t:1},
  {n:"Pan de muerto",d:"Bebida de temporada",z:F,f:1,pm:1,t:1},
@@ -161,9 +166,9 @@ const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0),units=()=>cart.reduce((s,x)=>s+x
 
 $("#menu").insertAdjacentHTML("beforeend",'<p class="stleg"><span class="st">★</span> = esta bebida suma un sello (la bebida 10 es gratis)</p>');
 MENU.forEach(g=>{
-  $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm"':""}>${g.c}</h2>`);
+  $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm'+(g.r?' rd':'')+'"':""}>${g.c}</h2>`);
   g.i.forEach(it=>{
-    const r=document.createElement("div");r.className="item"+(it.t?" tmp":"");
+    const r=document.createElement("div");r.className="item"+(it.t?" tmp":"")+(it.r?" rdx":"");
     const dr=!(g.c==="Snacks"||g.c==="Postres");
     r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}${dr?' <span class="st" title="Suma un sello">★</span>':""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
     const key=g.c+"|"+it.n;ROWS.push({k:key,r});
