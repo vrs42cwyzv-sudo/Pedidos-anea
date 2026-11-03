@@ -319,13 +319,16 @@ onAuthStateChanged(auth,u=>{me=u;cli=null;window.aneaUid=null;if(unsubC)unsubC()
 $q("#accb").onclick=()=>{paintAcc();$q("#adlg").showModal()};$q("#ac").onclick=$q("#ac2").onclick=()=>$q("#adlg").close();
 const aerr=m=>$q("#aerr").textContent=m||"";
 $q("#ag").onclick=async()=>{aerr();try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){try{await signInWithRedirect(auth,new GoogleAuthProvider())}catch(x){aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}}else if(!e||e.code!=="auth/popup-closed-by-user")aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}};
-$q("#al").onclick=async()=>{const name=$q("#an").value.trim(),d=$q("#ap").value.replace(/\D/g,"").slice(-10);aerr();
- if(!name){aerr("Escribe tu nombre.");return}if(d.length!==10){aerr("Escribe tu teléfono a 10 dígitos.");return}
+$q("#al").onclick=async()=>{const d=$q("#ap").value.replace(/\D/g,"").slice(-10);let name=$q("#an").value.trim();aerr();
+ if(d.length!==10){aerr("Escribe tu teléfono a 10 dígitos.");return}
  const b=$q("#al");b.disabled=true;b.textContent="Entrando…";
  try{let u=auth.currentUser;if(!u)u=(await signInAnonymously(auth)).user;
   const ex=await getDoc(doc(db,"clientes",d));
-  if(!ex.exists()){const R=()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789",a=new Uint8Array(10);crypto.getRandomValues(a);return[...a].map(x=>c[x%c.length]).join("")};
+  if(!ex.exists()){name=name||localName(d)||"";if(!name){$q("#an").hidden=false;const l=document.querySelector("label[for=an]");if(l)l.hidden=false;aerr("Es tu primera vez: escribe tu nombre.");b.disabled=false;b.textContent="Entrar a mi tarjeta";return}
+   const R=()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789",a=new Uint8Array(10);crypto.getRandomValues(a);return[...a].map(x=>c[x%c.length]).join("")};
    await setDoc(doc(db,"clientes",d),{name:name.slice(0,40),phone:d,code:"ANEA-"+R(),n:0,gifts:0,createdAt:serverTimestamp()})}
+  else name=ex.data().name||name;
+  window.rememberName(d,name);
   tel0=d;try{localStorage.setItem(TEL,d)}catch(e){}subCard(d)}
  catch(e){aerr("No se pudo entrar a tu tarjeta. Revisa tu internet e intenta de nuevo.")}
  b.disabled=false;b.textContent="Entrar a mi tarjeta"};
@@ -343,17 +346,20 @@ $q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObje
   h.hidden=!h.hidden;if(h.hidden)return;
   h.innerHTML=ios?"<b>En iPhone o iPad:</b><br>1. Abre esta página en <b>Safari</b>.<br>2. Toca el botón <b>Compartir</b> (el cuadro con la flecha hacia arriba).<br>3. Elige <b>Agregar a pantalla de inicio</b> y toca <b>Agregar</b>.":"<b>En Android:</b><br>1. Abre esta página en <b>Chrome</b>.<br>2. Toca los <b>tres puntos</b> de arriba a la derecha.<br>3. Elige <b>Agregar a pantalla de inicio</b> o <b>Instalar app</b>."}})();
 /* al escribir el teléfono: aparece el nombre ya registrado */
-const nameCache={};
+const nameCache={};const LN="aneaNames";
+const ph10=t=>String(t||"").replace(/\D/g,"").slice(-10);
+const localName=d=>{try{return (JSON.parse(localStorage.getItem(LN)||"{}")[d])||null}catch(e){return null}};
+window.rememberName=(d,n)=>{d=ph10(d);n=String(n||"").trim();if(d.length!==10||!n)return;try{const m=JSON.parse(localStorage.getItem(LN)||"{}");m[d]=n.slice(0,40);localStorage.setItem(LN,JSON.stringify(m))}catch(e){}};
 async function nameOf(d){if(d.length!==10)return null;if(d in nameCache)return nameCache[d];
  try{if(!auth.currentUser)await signInAnonymously(auth);const sn=await getDoc(doc(db,"clientes",d));return nameCache[d]=sn.exists()?(sn.data().name||null):null}catch(e){return null}}
-function autoName(phoneSel,nameSel,hintAfter,hintId){const pi=$q(phoneSel),ni=$q(nameSel);if(!pi||!ni)return;
+function autoName(phoneSel,nameSel,hintAfter,hintId,cb){const pi=$q(phoneSel),ni=$q(nameSel);if(!pi||!ni)return;
  const h=document.createElement("p");h.id=hintId;h.className="mini";h.style.cssText="margin:4px 0 0;color:#2f7d3b;font-weight:700";h.hidden=true;hintAfter.after(h);
  let seq=0,auto="";
- pi.addEventListener("input",async()=>{const d=pi.value.replace(/\D/g,"").slice(-10),my=++seq;h.hidden=true;if(d.length!==10)return;
-  const nm=await nameOf(d);if(my!==seq||!nm)return;
+ pi.addEventListener("input",async()=>{const d=pi.value.replace(/\D/g,"").slice(-10),my=++seq;h.hidden=true;if(cb)cb(false);if(d.length!==10)return;
+  const nm=(await nameOf(d))||localName(d);if(my!==seq)return;if(!nm){if(auto&&ni.value===auto){ni.value="";auto=""}return}if(cb)cb(true);
   if(!ni.value.trim()||ni.value===auto){ni.value=nm;auto=nm}
-  h.textContent="✓ Ya tienes tarjeta con este teléfono: "+nm;h.hidden=false})}
-autoName("#ap","#an",$q("#ap"),"aname");
+  h.textContent="✓ Bienvenida/o de nuevo: "+nm;h.hidden=false})}
+autoName("#ap","#an",$q("#ap"),"aname",f=>{$q("#an").hidden=f;const l=document.querySelector("label[for=an]");if(l)l.hidden=f});
 autoName("#phone","#name",$q("#phone"),"pname");
 /* al escribir el teléfono en el pedido: entra solo a su tarjeta */
 (()=>{const pi=$q("#phone");let q=0;
@@ -371,7 +377,7 @@ window.__gate=()=>{let no=false;try{no=sessionStorage.getItem("aneaNo")==="1"}ca
 $q("#adlg").addEventListener("close",()=>{if(window.__reopen){window.__reopen=false;try{sessionStorage.setItem("aneaNo","1")}catch(e){}setTimeout(()=>$q("#open").click(),250)}});
 new MutationObserver(()=>{const dn=$q("#done");if(!dn.hidden&&!$q("#sx")){const d=document.createElement("div");d.id="sx";if(cli){d.className="ok";d.innerHTML="⭐ Tus sellos se suman cuando te entreguen tu bebida. Llevas <b>"+(cli.n||0)+"</b> de 9; la bebida 10 es gratis."}else{d.className="perk";d.innerHTML="<b>¿Quieres que esta bebida cuente?</b> Crea tu tarjeta y empiezas a juntar sellos.";const b=document.createElement("button");b.className="cta";b.textContent="Crear mi tarjeta";b.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(b)}$q("#doneP").after(d)}if(dn.hidden){const x=$q("#sx");x&&x.remove()}}).observe($q("#done"),{attributes:true,attributeFilter:["hidden"]});
 
-window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp(),...(o.tarjeta?{tarjeta:o.tarjeta}:{})});return true};
+window.saveOrder=async o=>{window.rememberName(o.phone,o.name);await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp(),...(o.tarjeta?{tarjeta:o.tarjeta}:{})});return true};
 </script>
 </body>
 </html>
