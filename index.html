@@ -66,7 +66,7 @@ a.go[hidden]{display:none}
 .acc{position:fixed;top:10px;right:10px;z-index:6;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#b47a87,#9a5f6d);color:#fff;border:0;border-radius:99px;padding:10px 16px;font:600 15px system-ui;box-shadow:0 4px 14px #9a5f6d66}
 .acc .dot{width:24px;height:24px;border-radius:50%;background:#fff;color:#9a5f6d;display:flex;align-items:center;justify-content:center;font-size:13px}
 .acc.on{background:#fbf8f3;color:var(--ink);border:1px solid var(--line);box-shadow:0 2px 8px #0002}.acc.on .dot{background:var(--rose);color:#fff}
-#adlg .box{max-width:380px}#adlg input.tx{margin-bottom:8px}
+#adlg .box{max-width:380px;position:relative}#axx{position:absolute;top:8px;right:10px;width:36px;height:36px;border:0;background:none;font-size:20px;color:var(--muted);cursor:pointer}#adlg input.tx{margin-bottom:8px}
 .sbtn{display:block;width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;font:600 15px system-ui;margin-bottom:8px;color:var(--ink)}
 .sg{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0}
 .sg i{aspect-ratio:1;border-radius:50%;border:2px dashed var(--rose);display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--rose);font-size:14px}
@@ -98,10 +98,10 @@ a.go[hidden]{display:none}
     <div id="lines"></div>
     <div id="deliv"></div>
     <div id="addrw" hidden><label class="f" for="addr">Dirección de tu casa</label><textarea id="addr" rows="2" autocomplete="street-address"></textarea></div>
-    <label class="f" for="name">Nombre para el pedido</label>
-    <input class="tx" id="name" autocomplete="given-name" maxlength="40">
     <label class="f" for="phone">Teléfono de contacto</label>
     <input class="tx" id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="10 dígitos">
+    <label class="f" for="name">Nombre para el pedido</label>
+    <input class="tx" id="name" autocomplete="given-name" maxlength="40">
     <label class="f" for="note">Indicaciones (opcional)</label>
     <textarea id="note" rows="2" placeholder="Poca azúcar, sin hielo…"></textarea>
     <p class="err" id="err" role="alert"></p>
@@ -179,7 +179,7 @@ function openCfg(it,key){
   if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0,isOff("f|"+it.fi)],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0,isOff("f|"+f)])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10,isOff("f|"+f)])]);
   if(!it.x)h+=grp("Leche","l",[["Entera","Entera",0],["Deslactosada","Deslactosada",0]]);
   if(it.s)h+=grp("Shot de espresso","s",[["","Sin shot",0],["Shot","Con shot",10]]);
-  if(it.pm)h+=grp("Pan de muerto","pm",[["","Sin pan de muerto",0],["Pan","Agregar pan de muerto",30]]);
+  if(it.pm)h+=grp("Pan de muerto","pm",[["","Sin pan de muerto",0],["Pan","Agregar pan de muerto",30,isOff("Postres|Pan de muerto")]]);
   if(it.tp)h+=`<fieldset id="tpf"><legend id="tpl"></legend>${it.tp.map(t=>`<label class="chip"><input type="checkbox" name="tp" value="${t}"${isOff("t|"+t)?" disabled":""}><span>${t}${isOff("t|"+t)?" · agotado":""}</span></label>`).join("")}</fieldset>`;
   h+=`<button class="go" id="add"></button><button class="link" id="cx">Cancelar</button>`;
   $("#cfgb").innerHTML=h;
@@ -226,7 +226,7 @@ function lines(el,edit){
 }
 $("#deliv").innerHTML=grp("¿Dónde te lo entregamos?","e",[["CBTis","CBTis",0],["Prepa","Prepa",0],["Otros","Otros",0]]);
 $("#deliv").onchange=()=>{$("#addrw").hidden=val("e")!=="Otros";lines($("#lines"),1)};
-$("#open").onclick=()=>{if(!units()){$("#menu").scrollIntoView({behavior:"smooth"});return}$("#review").hidden=false;$("#done").hidden=true;$("#err").textContent="";lines($("#lines"),1);$("#dlg").showModal()};
+$("#open").onclick=()=>{if(!units()){$("#menu").scrollIntoView({behavior:"smooth"});return}if(window.__gate&&window.__gate())return;$("#review").hidden=false;$("#done").hidden=true;$("#err").textContent="";lines($("#lines"),1);$("#dlg").showModal()};
 $("#back").onclick=()=>$("#dlg").close();
 $("#send").onclick=async()=>{
   const name=$("#name").value.trim(),ph=$("#phone").value.trim(),e=val("e"),ad=$("#addr").value.trim(),note=$("#note").value.trim(),err=m=>$("#err").textContent=m;
@@ -256,13 +256,12 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
 <button class="acc" id="accb"><span class="dot">+</span><span id="acct">Mi cuenta</span></button>
 <dialog id="qdlg"><div id="qbig"></div><b id="qcode"></b><p class="mini" style="margin:2px 0 10px">Enséñaselo a la empleada para que lo escanee</p><button class="go" id="qx">Cerrar</button></dialog>
 <dialog id="adlg"><div class="box">
- <div id="a1"><h3>Tu bebida 10 es gratis 🎁</h3><p class="mini">Escribe tu nombre y tu teléfono. Si ya tienes tarjeta, entras a la misma desde cualquier celular. Juntas un sello por bebida y no pagas nada.</p>
-  <button class="sbtn" id="ag">G&nbsp; Continuar con Google</button>
-  <p class="mini" style="text-align:center;margin:8px 0">— o solo con tu nombre y teléfono —</p>
-  <label class="f" for="an">Tu nombre</label><input class="tx" id="an" maxlength="40" autocomplete="given-name">
+ <div id="a1"><button id="axx" type="button" aria-label="Cerrar">✕</button><h3>Inicia sesión con tu teléfono 🎁</h3><p class="mini">Escribe tu teléfono. Si ya tienes tarjeta, aparece tu nombre y entras. Tu bebida 10 es gratis.</p>
+  <button class="sbtn" id="ag" style="display:none">G&nbsp; Continuar con Google</button>
   <label class="f" for="ap">Tu teléfono (10 dígitos)</label><input class="tx" id="ap" type="tel" inputmode="tel" maxlength="20" autocomplete="tel">
+  <label class="f" for="an">Tu nombre</label><input class="tx" id="an" maxlength="40" autocomplete="given-name">
   <p class="aerr" id="aerr" role="alert"></p>
-  <button class="go" id="al">Entrar a mi tarjeta</button><button class="link" id="ac">Ahora no</button></div>
+  <button class="go" id="al">Entrar a mi tarjeta</button><button class="link" id="ac">Seguir sin tarjeta</button></div>
  <div id="a2" hidden><h3 id="hi"></h3><p class="mini">Tu tarjeta de lealtad</p>
   <div class="sg" id="sg"></div><div class="qc"><div id="qsm"></div><b id="qc2"></b><small>Muéstralo al pagar para que te pongan tu sello</small></div><div class="qr2"><button id="qf">Pantalla completa</button><button id="qd">Descargar mi QR</button></div><p id="sl" style="font-weight:700;margin:10px 0 0"></p><div id="perk"></div>
   <p class="mini">Los sellos se suman cuando te entregan tu bebida. La bebida 10 es gratis y luego la tarjeta empieza de nuevo.</p>
@@ -312,10 +311,10 @@ const fmtPh=d=>d.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
 function sg(n){$q("#sg").innerHTML=Array.from({length:10},(_,i)=>`<i class="${i<n&&i<9?"f":""} ${i==9?"g":""}">${i==9?"🎁":i<n?"♥":i+1}</i>`).join("");$q("#sl").textContent=n>=9?"¡Tu próxima bebida es gratis!":n+" de 9 sellos · la bebida 10 es gratis";$q("#perk").innerHTML=n>=9?'<div class="perk">🎁 Tu próxima bebida es la número 10 y va por la casa. Muestra tu QR al pagar y tu tarjeta vuelve a empezar desde 0.</div>':'<div class="mini">Te faltan '+(9-n)+' para tu bebida gratis.</div>'}
 function paintAcc(){const on=!!cli;$q(".acc").classList.toggle("on",on);$q(".acc .dot").textContent=on?cli.name[0].toUpperCase():"+";$q("#acct").textContent=on?cli.name.split(" ")[0]+((cli.n||0)>=9?" · 🎁 gratis":" · "+(cli.n||0)+"/10"):"Mi cuenta";
  $q("#a1").hidden=on;$q("#a2").hidden=!on;
- if(!on){$q("#ag").hidden=!!me;if(me&&!$q("#an").value)$q("#an").value=me.displayName||""}
+ if(!on){$q("#ag").hidden=!!(me&&!me.isAnonymous);if(me&&!$q("#an").value)$q("#an").value=me.displayName||""}
  if(on){$q("#hi").textContent="Hola, "+cli.name;const code=cli.code||"";$q("#qsm").innerHTML=aneaQRsvg(code,170);$q("#qc2").textContent=code;sg(cli.n||0);$q("#ax").hidden=false}}
 const TEL="aneaTel";let tel0=null;try{tel0=localStorage.getItem(TEL)}catch(e){}
-function subCard(d){if(unsubC)unsubC();unsubC=onSnapshot(doc(db,"clientes",d),s=>{cli=s.exists()?s.data():null;window.aneaUid=cli?d:null;paintAcc()},()=>{})}
+function subCard(d){if(unsubC)unsubC();unsubC=onSnapshot(doc(db,"clientes",d),s=>{cli=s.exists()?s.data():null;window.aneaUid=cli?d:null;paintAcc();if(cli&&window.__reopen)$q("#adlg").close()},()=>{})}
 onAuthStateChanged(auth,u=>{me=u;cli=null;window.aneaUid=null;if(unsubC)unsubC();unsubC=null;paintAcc();if(!u)return;if(tel0)subCard(tel0)});
 $q("#accb").onclick=()=>{paintAcc();$q("#adlg").showModal()};$q("#ac").onclick=$q("#ac2").onclick=()=>$q("#adlg").close();
 const aerr=m=>$q("#aerr").textContent=m||"";
@@ -343,9 +342,33 @@ $q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObje
   const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   h.hidden=!h.hidden;if(h.hidden)return;
   h.innerHTML=ios?"<b>En iPhone o iPad:</b><br>1. Abre esta página en <b>Safari</b>.<br>2. Toca el botón <b>Compartir</b> (el cuadro con la flecha hacia arriba).<br>3. Elige <b>Agregar a pantalla de inicio</b> y toca <b>Agregar</b>.":"<b>En Android:</b><br>1. Abre esta página en <b>Chrome</b>.<br>2. Toca los <b>tres puntos</b> de arriba a la derecha.<br>3. Elige <b>Agregar a pantalla de inicio</b> o <b>Instalar app</b>."}})();
+/* al escribir el teléfono: aparece el nombre ya registrado */
+const nameCache={};
+async function nameOf(d){if(d.length!==10)return null;if(d in nameCache)return nameCache[d];
+ try{if(!auth.currentUser)await signInAnonymously(auth);const sn=await getDoc(doc(db,"clientes",d));return nameCache[d]=sn.exists()?(sn.data().name||null):null}catch(e){return null}}
+function autoName(phoneSel,nameSel,hintAfter,hintId){const pi=$q(phoneSel),ni=$q(nameSel);if(!pi||!ni)return;
+ const h=document.createElement("p");h.id=hintId;h.className="mini";h.style.cssText="margin:4px 0 0;color:#2f7d3b;font-weight:700";h.hidden=true;hintAfter.after(h);
+ let seq=0,auto="";
+ pi.addEventListener("input",async()=>{const d=pi.value.replace(/\D/g,"").slice(-10),my=++seq;h.hidden=true;if(d.length!==10)return;
+  const nm=await nameOf(d);if(my!==seq||!nm)return;
+  if(!ni.value.trim()||ni.value===auto){ni.value=nm;auto=nm}
+  h.textContent="✓ Ya tienes tarjeta con este teléfono: "+nm;h.hidden=false})}
+autoName("#ap","#an",$q("#ap"),"aname");
+autoName("#phone","#name",$q("#phone"),"pname");
+/* al escribir el teléfono en el pedido: entra solo a su tarjeta */
+(()=>{const pi=$q("#phone");let q=0;
+ pi.addEventListener("input",async()=>{const d=pi.value.replace(/\D/g,"").slice(-10),my=++q;if(d.length!==10)return;
+  const nm=await nameOf(d);if(my!==q)return;
+  const bx=()=>{let a=$q("#acctn");if(!a){a=document.createElement("div");a.id="acctn";a.className="mini";$q("#name").before(a)}return a};
+  if(nm){if(window.aneaUid!==d){tel0=d;try{localStorage.setItem(TEL,d)}catch(e){}subCard(d)}
+   bx().textContent="✓ Entraste a tu tarjeta. Ganas sellos con este pedido."}
+  else if(window.aneaUid&&window.aneaUid!==d){tel0=null;try{localStorage.removeItem(TEL)}catch(e){}if(unsubC)unsubC();unsubC=null;cli=null;window.aneaUid=null;paintAcc();bx().textContent=""}})})();
 /* al abrir el pedido: datos de la cuenta */
-$q("#open").addEventListener("click",()=>setTimeout(()=>{let d=$q("#acctn");if(!d){d=document.createElement("p");d.id="acctn";d.className="mini";$q("#name").before(d)}
- if(cli){$q("#name").value=cli.name;$q("#phone").value=fmtPh(cli.phone||"");d.textContent="✓ Tus datos vienen de tu cuenta. Ganas sellos con este pedido."}else{d.innerHTML="";const bt=document.createElement("button");bt.type="button";bt.className="sbtn";bt.style.cssText="border-color:var(--rose)";bt.textContent="🎁 Crea tu tarjeta y gana sellos con este pedido";bt.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(bt)}},50));
+$q("#open").addEventListener("click",()=>setTimeout(()=>{let d=$q("#acctn");if(!d){d=document.createElement("div");d.id="acctn";d.className="mini";$q("#name").before(d)}
+ if(cli){$q("#name").value=cli.name;$q("#phone").value=fmtPh(cli.phone||"");d.textContent="✓ Tus datos vienen de tu cuenta. Ganas sellos con este pedido."}else{d.innerHTML=""}},50));
+$q("#axx").onclick=()=>$q("#adlg").close();
+window.__gate=()=>{let no=false;try{no=sessionStorage.getItem("aneaNo")==="1"}catch(e){}if(cli||no)return false;window.__reopen=true;paintAcc();$q("#adlg").showModal();return true};
+$q("#adlg").addEventListener("close",()=>{if(window.__reopen){window.__reopen=false;try{sessionStorage.setItem("aneaNo","1")}catch(e){}setTimeout(()=>$q("#open").click(),250)}});
 new MutationObserver(()=>{const dn=$q("#done");if(!dn.hidden&&!$q("#sx")){const d=document.createElement("div");d.id="sx";if(cli){d.className="ok";d.innerHTML="⭐ Tus sellos se suman cuando te entreguen tu bebida. Llevas <b>"+(cli.n||0)+"</b> de 9; la bebida 10 es gratis."}else{d.className="perk";d.innerHTML="<b>¿Quieres que esta bebida cuente?</b> Crea tu tarjeta y empiezas a juntar sellos.";const b=document.createElement("button");b.className="cta";b.textContent="Crear mi tarjeta";b.onclick=()=>{$q("#dlg").close();paintAcc();$q("#adlg").showModal()};d.append(b)}$q("#doneP").after(d)}if(dn.hidden){const x=$q("#sx");x&&x.remove()}}).observe($q("#done"),{attributes:true,attributeFilter:["hidden"]});
 
 window.saveOrder=async o=>{await addDoc(collection(db,"orders"),{name:o.name,items:o.items,phone:o.phone,day:o.day,total:o.total,dest:o.dest,note:o.note,status:"nuevo",createdAt:serverTimestamp(),...(o.tarjeta?{tarjeta:o.tarjeta}:{})});return true};
