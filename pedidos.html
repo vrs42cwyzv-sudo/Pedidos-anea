@@ -126,8 +126,8 @@ function card(o){
   const n=document.createElement("b");n.textContent=o.name;
   const s=document.createElement("span");s.textContent=`${hm(o)} · ${o.dest}`;
   h.append(n,s);c.append(h);
-  o.items.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=i.name==="Costo de envío"?`Costo de envío · $${i.p}`:`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"")+(i.regalo?" · 🎁 GRATIS (bebida 10 de su tarjeta)":"");if(i.regalo)d.className="it gift";c.append(d)});
-  if(o.sellos&&o.status==="entregado"){const d=document.createElement("div"),k=o.sellos;d.className="it sl";d.textContent=k.gift?`🎁 Bebida gratis aplicada · tarjeta reiniciada`+(k.add>0?` · +${k.add} ${k.add==1?"sello":"sellos"} (queda en ${k.to} de 10)`:""):`⭐ +${k.add} ${k.add==1?"sello":"sellos"} (de ${k.from} a ${k.to} de 10) · total ${money(o.total)}`;c.append(d)}
+  o.items.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=i.name==="Costo de envío"?`Costo de envío · $${i.p}`:`${i.q} × ${i.name}`+(i.opt?` (${i.opt})`:"")+(i.canje&&!i.regalo?" · 🎁 pidió canjear":"")+(i.regalo?" · 🎁 GRATIS (bebida 10 de su tarjeta)":"");if(i.regalo)d.className="it gift";c.append(d)});
+  if(o.sellos&&o.status==="entregado"){const d=document.createElement("div"),k=o.sellos;d.className="it sl";d.textContent=k.save?`🎁 Bebida gratis GUARDADA para la próxima vez · tarjeta nueva en ${k.to} de 10`:k.used?`🎁 Bebida gratis guardada aplicada`+(k.add>0?` · +${k.add} ${k.add==1?"sello":"sellos"} (queda en ${k.to} de 10)`:""):k.gift?`🎁 Bebida gratis aplicada · tarjeta reiniciada`+(k.add>0?` · +${k.add} ${k.add==1?"sello":"sellos"} (queda en ${k.to} de 10)`:""):`⭐ +${k.add} ${k.add==1?"sello":"sellos"} (de ${k.from} a ${k.to} de 10) · total ${money(o.total)}`;c.append(d)}
   if(o.phone){const a=document.createElement("a");a.className="nt";a.href="tel:"+o.phone.replace(/[^\d+]/g,"");a.textContent="📞 "+o.phone;c.append(a)}
   if(o.note){const d=document.createElement("div");d.className="nt";d.textContent="Indicaciones: "+o.note;c.append(d)}
   const num=(o.phone||"").replace(/\D/g,"").replace(/^(52)?1?(\d{10})$/,"52$2");
@@ -137,10 +137,9 @@ function card(o){
     const nm=(o.name||"").split(" ")[0],t=listo?`Hola ${nm}, tu pedido de Anea ya está listo ☕ ¡Gracias!`:`Hola ${nm}, recibimos tu pedido en Anea y ya lo estamos preparando ☕ ¡Gracias!`;
     w.href=`https://wa.me/${num}?text=${encodeURIComponent(t)}`;c.append(w);
   }
-  if(o.tarjeta&&o.status!=="entregado"){const cd=needCard(o.tarjeta);if(cd){const d=drinksOf(o.items),{f:gf,nn}=calc(cd.n||0,d),ch=cheapest(o.items),bx=document.createElement("div");
-    if(gf&&ch){bx.className="lyg";bx.textContent=`🎁 Esta bebida es GRATIS (la 10 de su tarjeta): ${ch.name} · −$${ch.p} · COBRAR $${Math.max(0,(o.total||0)-ch.p)}. La tarjeta se reinicia al entregar.`}
-    else if(d>0){bx.className="lyk";bx.textContent=`⭐ Tarjeta de ${cd.name}: al entregar suma ${d} ${d===1?"sello":"sellos"} (queda en ${nn} de 10)`}
-    if(bx.className)c.append(bx)}}
+  if(o.tarjeta&&o.status!=="entregado"){const cd=needCard(o.tarjeta);if(cd){const n0=cd.n||0,d=drinksOf(o.items),pl=plan(n0,cd.pend||0,d,o.items,o.id),g=giftBox(o.items,cd,d,o.id,()=>render());
+    if(g){if(pl.gi>=0){const p2=document.createElement("div");p2.style.cssText="margin-top:6px";p2.textContent=`COBRAR $${Math.max(0,(o.total||0)-o.items[pl.gi].p)}`;g.append(p2)}c.append(g)}
+    else if(d>0){const bx=document.createElement("div");bx.className="lyk";bx.textContent=`⭐ Tarjeta de ${cd.name}: al entregar suma ${d} ${d===1?"sello":"sellos"} (queda en ${pl.nn} de 10)`;c.append(bx)}}}
   const f=document.createElement("div");f.className="ft";
   const t=document.createElement("b");t.textContent="$"+o.total;f.append(t);
   const nx=NX[o.status];
@@ -280,8 +279,34 @@ const drinksOf=items=>(items||[]).reduce((a,i)=>a+(isDr(i)&&(i.p>0||i.regalo)?(i
 const calc=(n,d)=>({f:Math.floor((n+d)/10),nn:(n+d)%10});
 const whoIs=()=>owner?"Patrón":"Empleado";
 const ph10=t=>String(t||"").replace(/\D/g,"").slice(-10);
-const cheapest=items=>{let b=null;(items||[]).forEach(i=>{if(isDr(i)&&i.p>0&&(!b||i.p<b.p))b=i});return b};
-function giftify(items){const its=items.map(i=>({...i})),ch=cheapest(its);if(!ch)return{items:its,gift:0};const g=ch.p;
+const noReg=i=>/^Strawberry matcha/i.test(i.name||"");
+const elig=i=>isDr(i)&&i.p>0&&!noReg(i);
+const defIdx=items=>{const a=items||[];let b=-1;a.forEach((i,k)=>{if(i.canje&&elig(i)&&b<0)b=k});if(b>=0)return b;a.forEach((i,k)=>{if(elig(i)&&(b<0||i.p<a[b].p))b=k});return b};
+const giftPick={};
+function plan(n0,p0,d,items,key){const pk=giftPick[key],ks=[];items.forEach((i,k)=>{if(elig(i))ks.push(k)});
+  const pick=()=>(typeof pk==="number"&&items[pk]&&elig(items[pk]))?pk:defIdx(items);
+  const t=n0+d,f=Math.floor(t/10);
+  if(f>=1){
+    if(!ks.length||pk==="later")return{cr:1,mode:"save",gi:-1,nn:t%10,pd:1,gift:0,add:d};
+    return{cr:1,mode:"cross",gi:pick(),nn:t%10,pd:Math.min(1,f-1),gift:1,add:Math.max(0,d-1)}}
+  if(p0>0&&ks.length&&pk!=="none"){let gi=-1;if(typeof pk==="number"&&items[pk]&&elig(items[pk]))gi=pk;else if(pk===undefined)gi=items.findIndex(i=>i.canje&&elig(i));
+    if(gi>=0){const t2=n0+d-1,f2=Math.floor(t2/10);return{cr:f2>0?1:0,mode:"pend",gi,nn:t2%10,pd:-1+Math.min(1,f2),gift:1,add:Math.max(0,d-1)}}}
+  return{cr:0,mode:"none",gi:-1,nn:t%10,pd:0,gift:0,add:d}}
+function giftBox(items,card,d,key,rr){const n0=card.n||0,p0=card.pend||0,f=Math.floor((n0+d)/10);if(!f&&p0<=0)return null;
+  const ks=[];items.forEach((i,k)=>{if(elig(i))ks.push(k)});const pl=plan(n0,p0,d,items,key);
+  const bx=document.createElement("div");bx.className="lyg";const t=document.createElement("div");
+  if(f&&!ks.length){t.textContent=`🎁 Le toca bebida gratis, pero aquí no hay una que se pueda regalar (la Strawberry matcha no se canjea). Queda GUARDADA para su próxima vez y su tarjeta nueva empieza en ${pl.nn} de 10.`;bx.append(t);return bx}
+  if(!ks.length)return null;
+  const on=pl.gi>=0,offv=f?"later":"none",row=document.createElement("div");row.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap";
+  const mk=(txt,act,sel)=>{const b=document.createElement("button");b.type="button";b.textContent=txt;b.style.cssText="flex:1;min-width:140px;padding:11px 10px;border-radius:10px;border:2px solid #2f7d3b;font:inherit;font-weight:700;cursor:pointer;"+(sel?"background:#2f7d3b;color:#fff":"background:#fff;color:#2f7d3b");b.onclick=()=>{giftPick[key]=act;rr()};return b};
+  row.append(mk(f?"🎁 Regalar ahora":"🎁 Usar ahora",on?pl.gi:defIdx(items),on),mk(f?"⏳ Guardar para la próxima vez":"⏳ No usar ahora",offv,!on));
+  const cj=on&&items[pl.gi]&&items[pl.gi].canje?" La clienta pidió canjear esta.":"";
+  t.textContent=f?(on?`🎁 Es la bebida 10: va GRATIS ${items[pl.gi].name}.`+cj+" (La Strawberry matcha no se puede regalar.)":`🎁 La bebida gratis queda GUARDADA para la próxima vez. Su tarjeta nueva empieza en ${pl.nn} de 10.`):(on?`🎁 Tiene ${p0} ${p0===1?"bebida gratis guardada":"bebidas gratis guardadas"}: se usa en ${items[pl.gi].name}.`+cj:`🎁 Tiene ${p0} ${p0===1?"bebida gratis guardada":"bebidas gratis guardadas"}. ¿La usa en este pedido?`);
+  bx.append(t,row);
+  if(on&&ks.length>1){const s=document.createElement("select");s.style.cssText="display:block;width:100%;margin-top:8px;padding:10px;font:inherit;border-radius:10px;border:1.5px solid #2f7d3b;background:#fff";
+    ks.forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${items[k].name}${items[k].opt?" ("+items[k].opt+")":""} · −$${items[k].p}`;s.append(o)});s.value=String(pl.gi);s.onchange=()=>{giftPick[key]=+s.value;rr()};bx.append(s)}
+  return bx}
+function giftify(items,gi){const its=items.map(i=>({...i})),ch=its[gi];if(!ch)return{items:its,gift:0};const g=ch.p;
   if(ch.q>1){ch.q-=1;its.push({...ch,q:1,p:0,regalo:g})}else{ch.regalo=g;ch.p=0}return{items:its,gift:g}}
 const cool=c=>!owner&&c&&c.last&&c.last.toMillis&&Date.now()-c.last.toMillis()<120000;
 async function findCards(txt){const t=String(txt||"").trim(),c=collection(db,"clientes");let q1;
@@ -308,17 +333,17 @@ function scanner(onCards){const w=document.createElement("div");
   w.querySelector(".scs").onclick=()=>lookup(inp.value);inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();lookup(inp.value)}};
   return{el:w,stop}}
 function needCard(uid){const c=cardCache[uid];if(c)return c.loading?null:c.d;cardCache[uid]={loading:true};getDoc(doc(db,"clientes",uid)).then(s=>{cardCache[uid]={d:s.exists()?{id:s.id,...s.data()}:null};if(!typing())render()}).catch(()=>{delete cardCache[uid]});return null}
-async function deliverWithCard(o){try{const cs=await getDoc(doc(db,"clientes",o.tarjeta));if(!cs.exists())throw 0;const c={id:cs.id,...cs.data()},n0=c.n||0,d=drinksOf(o.items),{f,nn}=calc(n0,d);
+async function deliverWithCard(o){try{const cs=await getDoc(doc(db,"clientes",o.tarjeta));if(!cs.exists())throw 0;const c={id:cs.id,...cs.data()},n0=c.n||0,d=drinksOf(o.items),p0=c.pend||0,pl=plan(n0,p0,d,o.items,o.id),nn=pl.nn;
     if(d===0||cool(c)){await updateDoc(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp()});if(d>0)alert("Entregado, pero NO se sumaron sellos: a esta clienta ya se le selló hace menos de 2 minutos. Avisa al patrón si hace falta.");return}
-    const g=f?giftify(o.items):{items:o.items,gift:0},b=writeBatch(db);
-    b.update(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp(),items:g.items,total:(o.total||0)-g.gift,sellos:{add:d-f,from:n0,to:nn,gift:f}});
-    b.update(doc(db,"clientes",c.id),{n:nn,gifts:(c.gifts||0)+f,last:serverTimestamp()});
-    b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:whoIs(),add:d-f,dr:d,g:f,k:"entrega"});
-    await b.commit();delete cardCache[o.tarjeta]}
+    const g=pl.gi>=0?giftify(o.items,pl.gi):{items:o.items,gift:0},b=writeBatch(db),np=Math.min(5,Math.max(0,p0+pl.pd));
+    b.update(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp(),items:g.items,total:(o.total||0)-g.gift,sellos:{add:pl.add,from:n0,to:nn,gift:pl.gift,...(pl.mode==="save"?{save:1}:{}),...(pl.mode==="pend"?{used:1}:{})}});
+    b.update(doc(db,"clientes",c.id),{n:nn,gifts:(c.gifts||0)+pl.gift,pend:np,last:serverTimestamp()});
+    b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:whoIs(),add:pl.add,dr:d,g:pl.gift,k:"entrega"});
+    await b.commit();delete cardCache[o.tarjeta];delete giftPick[o.id]}
   catch(e){try{await updateDoc(doc(db,"orders",o.id),{status:"entregado",deliveredAt:serverTimestamp()});alert("Pedido entregado, pero no se pudieron sumar los sellos de la tarjeta. Avisa al patrón.")}catch(x){alert("No se pudo marcar como entregado. Revisa tu internet e intenta de nuevo.")}}}
 let tcart=[];
 function sel(label,opts,on){const l=document.createElement("label");l.className="f";l.textContent=label;const s=document.createElement("select");opts.forEach(([v,t,d])=>{const o=document.createElement("option");o.value=v;o.textContent=t;if(d)o.disabled=true;s.append(o)});if(on)s.onchange=on;l.append(s);return [l,s]}
-function openSale(){
+function openSale(){delete giftPick.tienda;
   const b=$("#tbody");b.innerHTML="";
   const h=document.createElement("h3");h.textContent="Nueva venta de tienda";
   const items=[];const buildItems=()=>{items.length=0;CARTA.forEach(g=>g.i.forEach(x=>{x._k=g.c+"|"+x.n;items.push(x)}));otros.forEach(o=>items.push({n:o.n,p:o.p,b:o.b||0,x:1,_o:1,_k:"o|"+o.n}));items.push({n:"➕ Otro producto…",x:1,p:0,_other:1,_k:"o|new"})};buildItems();
@@ -363,14 +388,14 @@ function openSale(){
     if(!card){if(!scn){scn=scanner(rs=>{if(rs.length>1){pickList(rs);return}setCard(rs[0])})}ly.append(scn.el);return}
     const w=document.createElement("div");w.className="lyw";w.innerHTML="";const nmE=document.createElement("div");nmE.className="lyn";nmE.textContent="✓ Cliente: "+card.name;w.append(nmE);
     const no=document.createElement("button");no.type="button";no.className="lk";no.textContent="no es ella";no.onclick=()=>{card=null;nm.value="";nm.readOnly=false;lyPaint()};
-    const d=drinksOf(tcart),{f,nn}=calc(card.n||0,d),dots=document.createElement("div");dots.className="dots";
+    const d=drinksOf(tcart),pl=plan(card.n||0,card.pend||0,d,tcart,"tienda"),f=pl.cr,nn=pl.nn,dots=document.createElement("div");dots.className="dots";
     for(let i=1;i<=10;i++){const e=document.createElement("i");if(i===10){e.className="g"+(f?" f":"");e.textContent="🎁"}else if(f){e.className=i<=nn?"f":"";e.textContent=i<=nn?"♥":i}else if(i<=card.n){e.className="f";e.textContent="♥"}else if(i<=nn){e.className="nw";e.textContent="+"}else e.textContent=i;dots.append(e)}
-    const inf=document.createElement("div");inf.className="lyi";const ch=cheapest(tcart);
-    if(f&&ch){inf.innerHTML="";const a=document.createElement("div");a.className="lyg";a.textContent=`🎁 ¡Bebida GRATIS! La bebida 10 de su tarjeta va gratis: ${ch.name} · −$${ch.p} (no se cobra)`;inf.append(a)}
-    const sm=document.createElement("div");sm.className="lyx";sm.textContent=!tcart.length?`Tiene ${card.n||0} de 9 sellos.`:d===0?"Esta venta no tiene bebidas: no suma sellos.":f?`Tarjeta nueva · queda en ${nn} de 10`:`Suma ${d} ${d===1?"sello":"sellos"} · queda en ${nn} de 10`+(nn>=9?" · 🎁 su próxima bebida es gratis":"");inf.append(sm);
+    const inf=document.createElement("div");inf.className="lyi";
+    {const gb=giftBox(tcart,card,d,"tienda",()=>lyPaint());if(gb)inf.append(gb)}
+    const sm=document.createElement("div");sm.className="lyx";sm.textContent=!tcart.length?`Tiene ${card.n||0} de 9 sellos.`+(card.pend?` · 🎁 ${card.pend} ${card.pend===1?"bebida gratis guardada":"bebidas gratis guardadas"}`:""):d===0?"Esta venta no tiene bebidas: no suma sellos.":f?`Tarjeta nueva · queda en ${nn} de 10`:`Suma ${d} ${d===1?"sello":"sellos"} · queda en ${nn} de 10`+(nn>=9?" · 🎁 su próxima bebida es gratis":"");inf.append(sm);
     if(cool(card)){const c2=document.createElement("div");c2.className="lyw2";c2.textContent="⚠ A esta clienta ya se le selló hace menos de 2 minutos. La venta se guardará SIN sellos. Si hace falta, avisa al patrón.";inf.append(c2)}
     w.append(dots,inf,no);ly.append(w);
-    if(f&&ch){const net=Math.max(0,g0-ch.p);reg.textContent=net>0?`Registrar venta · COBRAR ${money(net)} · 🎁 −${money(ch.p)} gratis`:"Registrar venta · 🎁 gratis, no cobrar"}}
+    if(pl.gi>=0){const ch=tcart[pl.gi],net=Math.max(0,g0-ch.p);reg.textContent=net>0?`Registrar venta · COBRAR ${money(net)} · 🎁 −${money(ch.p)} gratis`:"Registrar venta · 🎁 gratis, no cobrar"}else reg.textContent="Registrar venta · "+money(g0)}
   function setCard(c){card=c;nm.value=c.name;nm.readOnly=true;if(scn)scn.stop();lyPaint()}
   function pickList(rs){ly.innerHTML="";const h=document.createElement("div");h.className="lyh";h.textContent="Hay varias tarjetas con ese teléfono. ¿Cuál es?";ly.append(h);rs.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="csv";b.textContent=c.name+" · "+(c.n||0)+" sellos";b.onclick=()=>setCard(c);ly.append(b)})}
   const refill=idx=>{buildItems();const s=sc[1];s.innerHTML="";optsOf().forEach(([v,t,d])=>{const o=document.createElement("option");o.value=v;o.textContent=t;if(d)o.disabled=true;s.append(o)});s.value=String(idx>=0?idx:items.length-1);draw()};
@@ -385,14 +410,14 @@ function openSale(){
     const base={dest:"Tienda",origen:"tienda",phone:"",note:"",status:"entregado"},items0=tcart.map(l=>({...l})),gross=items0.reduce((s,l)=>s+l.p*l.q,0);
     try{
       if(!card){await saleSave({...base,name:nm.value.trim()||"Mostrador",items:items0,total:gross})}
-      else{const d=drinksOf(items0),n0=card.n||0,{f,nn}=calc(n0,d);
+      else{const d=drinksOf(items0),n0=card.n||0,p0=card.pend||0,pl=plan(n0,p0,d,items0,"tienda"),nn=pl.nn,np=Math.min(5,Math.max(0,p0+pl.pd));
         if(d===0||cool(card)){await saleSave({...base,name:card.name,tarjeta:card.id,items:items0,total:gross});if(d>0)alert("Venta registrada, pero NO se sumaron sellos: a esta clienta ya se le selló hace menos de 2 minutos.")}
-        else{const g=f?giftify(items0):{items:items0,gift:0},ref=doc(collection(db,"orders")),b=writeBatch(db);
+        else{const g=pl.gi>=0?giftify(items0,pl.gi):{items:items0,gift:0},ref=doc(collection(db,"orders")),b=writeBatch(db);
           b.set(ref,{...base,name:card.name,tarjeta:card.id,items:g.items,total:gross-g.gift,day:today(),createdAt:serverTimestamp()});
-          b.update(doc(db,"clientes",card.id),{n:nn,gifts:(card.gifts||0)+f,last:serverTimestamp()});
-          b.set(doc(collection(db,"sellos")),{cid:card.id,name:card.name,day:today(),t:serverTimestamp(),who:whoIs(),add:d-f,dr:d,g:f,k:"venta"});
+          b.update(doc(db,"clientes",card.id),{n:nn,gifts:(card.gifts||0)+pl.gift,pend:np,last:serverTimestamp()});
+          b.set(doc(collection(db,"sellos")),{cid:card.id,name:card.name,day:today(),t:serverTimestamp(),who:whoIs(),add:pl.add,dr:d,g:pl.gift,k:"venta"});
           try{await b.commit()}catch(e){await saleSave({...base,name:card.name,tarjeta:card.id,items:items0,total:gross});alert("Venta registrada, pero NO se pudieron sumar los sellos ni la bebida gratis. Cóbrala completa y avisa al patrón.")}}}
-      tcart=[];$("#tienda").close()}
+      tcart=[];delete giftPick.tienda;$("#tienda").close()}
     catch(e){alert("No se pudo guardar la venta. Revisa tu internet e intenta de nuevo.")}
     reg.disabled=false};
   cx.onclick=()=>$("#tienda").close();
@@ -522,14 +547,14 @@ function renderClientas(L){
   const tb=document.createElement("table");tb.className="tb";tb.append(head(["Clienta","Visitas","Bebidas","Gratis","Sellos"]));
   const by={};sellos.forEach(e=>{const x=by[e.cid]=by[e.cid]||{v:0,d:0};if(e.k!=="ajuste"){x.v++;x.d+=e.dr}});
   const draw=()=>{[...tb.querySelectorAll("tr.kc")].forEach(r=>r.remove());const t=kQ.trim().toLowerCase(),d=kQ.replace(/\D/g,"");
-    clientes.filter(c=>!t||c.name.toLowerCase().includes(t)||(d&&(c.phone||"").includes(d))).forEach(c=>{const x=by[c.id]||{v:0,d:0},r=document.createElement("tr");r.className="kc";r.append(td(c.name+" · "+(c.phone||"")),td(x.v,"n"),td(x.d,"n"),td(c.gifts?"🎁 "+c.gifts:"—","n"),td((c.n||0)+"/10"+((c.n||0)>=9?" 🎁":""),"n"));r.onclick=()=>{kSel=c.id;kT=null;render()};tb.append(r)})};
+    clientes.filter(c=>!t||c.name.toLowerCase().includes(t)||(d&&(c.phone||"").includes(d))).forEach(c=>{const x=by[c.id]||{v:0,d:0},r=document.createElement("tr");r.className="kc";r.append(td(c.name+" · "+(c.phone||"")),td(x.v,"n"),td(x.d,"n"),td(c.gifts?"🎁 "+c.gifts:"—","n"),td((c.n||0)+"/10"+((c.n||0)>=9||c.pend?" 🎁":"")+(c.pend?" ×"+c.pend:""),"n"));r.onclick=()=>{kSel=c.id;kT=null;render()};tb.append(r)})};
   f.oninput=()=>{kQ=f.value;draw()};draw();const w=document.createElement("div");w.className="tw";w.append(tb);q.append(w);L.append(q)}
 function renderClienta(L,c){const n=c.n||0;if(kT==null)kT=n;const p=box(c.name);
   const bk=document.createElement("button");bk.className="csv";bk.textContent="← Volver a la lista";bk.onclick=()=>{kSel=null;kT=null;render()};L.append(bk);
   const ln=document.createElement("p");ln.style.cssText="margin:0 0 6px;color:var(--muted)";ln.textContent=`${c.phone||""} · ${c.code||""}`;p.append(ln);
   const mine=sellos.filter(e=>e.cid===c.id),vs=mine.filter(e=>e.k!=="ajuste");
   p.append(row("Sellos",n+" de 10"),row("Visitas",vs.length),row("Bebidas",vs.reduce((a,e)=>a+e.dr,0)));
-  const gf=document.createElement("div");gf.className="lyg";gf.textContent=`🎁 Bebidas gratis: ${c.gifts||0} · tarjeta reiniciada ${c.gifts||0} ${(c.gifts||0)===1?"vez":"veces"}`;p.append(gf);
+  const gf=document.createElement("div");gf.className="lyg";gf.textContent=`🎁 Bebidas gratis: ${c.gifts||0} · tarjeta reiniciada ${c.gifts||0} ${(c.gifts||0)===1?"vez":"veces"}${c.pend?` · 🎁 guardadas para la próxima: ${c.pend}`:""}`;p.append(gf);
   const ed=document.createElement("div");ed.style.marginTop="12px";const th=document.createElement("b");th.textContent="Editar sellos (solo patrón)";ed.append(th);
   const pk=document.createElement("div");pk.className="kpk";
   for(let i=1;i<=10;i++){let el;if(i===10){el=document.createElement("span");el.className="g";el.textContent="🎁"}else{el=document.createElement("button");el.type="button";let cl="",t=i;if(i<=n&&i<=kT){cl="f";t="♥"}else if(i>n&&i<=kT){cl="nw";t="+"}else if(i<=n&&i>kT){cl="rm";t="✕"}el.className=cl;el.textContent=t;el.onclick=()=>{kT=(i===kT)?i-1:i;render()}}pk.append(el)}

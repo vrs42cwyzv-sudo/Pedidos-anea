@@ -38,6 +38,7 @@ button{font:inherit;cursor:pointer}
 h2.tm{border-bottom-color:#e8883a;color:#a8480f}
 .item.rdx{background:rgba(214,60,70,.16);border-left:5px solid #c8323c;border-radius:10px;padding-left:12px;margin-top:6px;border-bottom:0}
 .item.rdx .pk{background:#d9525b;color:#fff}.item.rdx .pk:active{background:#c8323c}.item.rdx .st{color:#d9525b}
+.cjb{margin:12px 0;padding:12px 14px;border-radius:12px;background:#fff;border:1.5px solid var(--rose);text-align:center;font-size:.95rem}.cjb .go{width:100%;margin-top:6px}.cjb .link{padding:6px 0 0}
 h2.rd{border-bottom-color:#c8323c;color:#a3202a}
 .go{display:block;width:100%;padding:14px;margin-top:18px;text-align:center;text-decoration:none;font-size:1rem}
 .link{background:none;border:0;color:var(--muted);width:100%;padding:12px 0 0;text-decoration:underline}
@@ -157,14 +158,15 @@ const MENU=[
 MENU.forEach(g=>g.i.forEach(it=>{const m=Math.min(...(it.z?it.z.map(z=>z[1]):[it.p]));it.d=(it.d?it.d+" · ":"")+(it.z?"desde ":"")+money(m)}));
 let cart=[],cur=null,curKey="";const ROWS=[];let OFF=new Set();
 const isOff=k=>OFF.has(k);window.isOff=isOff;
-function applyOff(){ROWS.forEach(({k,r})=>{const o=isOff(k),b=r.querySelector("button");r.classList.toggle("off",o);b.disabled=o;b.textContent=o?"Agotado":"Elegir"})}
+const cjOk=k=>{const g=k.split("|")[0],n=k.slice(k.indexOf("|")+1);return g!=="Snacks"&&g!=="Postres"&&!/^Strawberry matcha/i.test(n)};
+function applyOff(){ROWS.forEach(({k,r})=>{const o=isOff(k),nc=!!window.__canje&&!cjOk(k),b=r.querySelector("button");r.classList.toggle("off",o||nc);b.disabled=o||nc;b.textContent=o?"Agotado":nc?"No canjeable":"Elegir"})}
 window.setOff=l=>{OFF=new Set(l||[]);applyOff()};
 const grp=(t,k,o)=>{const first=o.findIndex(x=>!x[3]);return `<fieldset><legend>${t}</legend>${o.map(([v,l,p,off],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i===first?" checked":""}${off?" disabled":""}><span>${l}${off?" · agotado":p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`};
 const val=k=>{const e=$(`input[name=${k}]:checked`);return e?e.value:""};
 const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")&&!cur.fi?10:0)+(val("s")?10:0)+(val("pm")?30:0);
-const total=()=>cart.reduce((s,x)=>s+x.p*x.q,0),units=()=>cart.reduce((s,x)=>s+x.q,0);
+const cjDisc=()=>cart.reduce((s,x)=>s+(x.canje?x.p:0),0),total=()=>cart.reduce((s,x)=>s+(x.canje?0:x.p*x.q),0),units=()=>cart.reduce((s,x)=>s+x.q,0);
 
-$("#menu").insertAdjacentHTML("beforeend",'<p class="stleg"><span class="st">★</span> = esta bebida suma un sello (la bebida 10 es gratis)</p>');
+$("#menu").insertAdjacentHTML("beforeend",'<p class="stleg"><span class="st">★</span> = esta bebida suma un sello (la bebida 10 es gratis)</p><div class="cjb" id="cjb" hidden></div>');
 MENU.forEach(g=>{
   $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm'+(g.r?' rd':'')+'"':""}>${g.c}</h2>`);
   g.i.forEach(it=>{
@@ -195,7 +197,7 @@ function openCfg(it,key){
       if(ev&&ev.target&&ev.target.name==="tp"&&pk().length>n)ev.target.checked=false;
       $("#tpl").textContent=`Elige ${n} toppings (${pk().length}/${n})`}
     const ok=!n||pk().length===n;$("#add").disabled=!ok;
-    $("#add").textContent=ok?`Agregar · ${money(price())}`:`Elige ${n} toppings`};
+    $("#add").textContent=ok?(window.__canje?`🎁 Canjear gratis · ${money(price())}`:`Agregar · ${money(price())}`):`Elige ${n} toppings`};
   $("#cfgb").onchange=up;up();
   $("#add").onclick=()=>{addItem();$("#cfg").close()};
   $("#cx").onclick=()=>$("#cfg").close();
@@ -206,6 +208,7 @@ function addItem(){
   const parts=[val("z"),tp.length&&"toppings: "+tp.join(", "),val("f")&&`cloud foam de ${val("f")}`,val("s")&&"shot de espresso",val("pm")&&"con pan de muerto",val("l")&&`leche ${val("l").toLowerCase()}`].filter(Boolean);
   const name=cur.n+(cur.h?" caliente":"")+(val("v")?` ${val("v")}`:"");
   const key=name+"|"+parts.join(",");
+  if(window.__canje){cart=cart.filter(x=>!x.canje);cart.push({key:"canje|"+key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1,canje:1});window.__canje=false;applyOff();upd();return}
   const ex=cart.find(x=>x.key===key);
   if(ex)ex.q++;else cart.push({key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1});
   upd();
@@ -215,16 +218,17 @@ function upd(){
   $("#count").textContent=u?"Pedir":"Pedir bebidas";
   $("#n").hidden=!u;$("#n").textContent=u;
   $("#sum").textContent=u?money(total()):"";
+  if(window.cjPaint)window.cjPaint();
 }
 function lines(el,edit){
   el.innerHTML="";
   cart.forEach(x=>{
     const d=document.createElement("div");d.className="ln";
-    d.innerHTML=`<div class="t"><b></b><small></small></div>`+(edit?`<div class="q"><button aria-label="Quitar uno">−</button><span>${x.q}</span><button aria-label="Agregar uno">+</button></div>`:`<span>${x.q} ×</span>`)+`<span>${money(x.p*x.q)}</span>`;
-    d.querySelector("b").textContent=x.name;d.querySelector("small").textContent=x.opt;
+    d.innerHTML=`<div class="t"><b></b><small></small></div>`+(edit?`<div class="q"><button aria-label="Quitar uno">−</button><span>${x.q}</span>${x.canje?"":'<button aria-label="Agregar uno">+</button>'}</div>`:`<span>${x.q} ×</span>`)+`<span>${x.canje?"GRATIS":money(x.p*x.q)}</span>`;
+    d.querySelector("b").textContent=(x.canje?"🎁 ":"")+x.name;d.querySelector("small").textContent=x.opt+(x.canje?(x.opt?" · ":"")+"canje de tu bebida 10":"");
     if(edit){const [m,p]=d.querySelectorAll("button");
       m.onclick=()=>{x.q--;if(!x.q)cart=cart.filter(y=>y!==x);upd();cart.length?lines(el,1):$("#dlg").close()};
-      p.onclick=()=>{x.q++;upd();lines(el,1)};}
+      if(p)p.onclick=()=>{x.q++;upd();lines(el,1)};}
     el.append(d);
   });
   el.insertAdjacentHTML("beforeend",(envio()?`<div class="ln"><div class="t"><b>Costo de envío</b></div><span>${money(envio())}</span></div>`:"")+`<div class="tot"><span>Total</span><span>${money(total()+envio())}</span></div>`);
@@ -242,9 +246,9 @@ $("#send").onclick=async()=>{
   if(gone.length){err("Se agotó: "+gone.join(", ")+". Quítalo de tu pedido para poder continuar.");return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
-  const order={name,phone:ph,...(window.aneaUid?{tarjeta:window.aneaUid}:{}),day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
+  const order={name,phone:ph,...(window.aneaUid?{tarjeta:window.aneaUid}:{}),day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+cjDisc()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p,...(x.canje?{canje:1}:{})})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
   let t=`Hola, soy ${name}. Quiero pedir:\n`;
-  cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${money(x.p*x.q)}\n`);
+  cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${x.canje?"🎁 GRATIS (canje)":money(x.p*x.q)}\n`);
   t+=(envio()?`Costo de envío: ${money(envio())}\n`:"")+`Total: ${money(total()+envio())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
   if(note)t+=`\nIndicaciones: ${note}`;
   let ok=false;
@@ -270,6 +274,7 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
  <div id="a2" hidden><h3 id="hi"></h3><p class="mini">Tu tarjeta de lealtad</p>
   <div class="sg" id="sg"></div><div class="qc"><div id="qsm"></div><b id="qc2"></b><small>Muéstralo al pagar para que te pongan tu sello</small></div><div class="qr2"><button id="qf">Pantalla completa</button><button id="qd">Descargar mi QR</button></div><p id="sl" style="font-weight:700;margin:10px 0 0"></p><div id="perk"></div>
   <p class="mini">Los sellos se suman cuando te entregan tu bebida. La bebida 10 es gratis y luego la tarjeta empieza de nuevo.</p>
+  <button class="sbtn" id="cjgo" style="margin-top:12px;border-color:var(--rose)" hidden>🎁 Canjear mi bebida gratis</button>
   <button class="sbtn" id="hm" style="margin-top:12px" hidden>📲 Agregar a mi pantalla de inicio</button>
   <div id="hmh" class="perk" hidden></div>
   <button class="link" id="ax">Cerrar sesión</button><button class="link" id="ac2">Cerrar</button></div>
@@ -314,14 +319,25 @@ onSnapshot(doc(db,"config","agotados"),s=>window.setOff&&window.setOff(s.exists(
 const $q=s=>document.querySelector(s);let me=null,cli=null,unsubC=null;
 const fmtPh=d=>d.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
 function sg(n){$q("#sg").innerHTML=Array.from({length:10},(_,i)=>`<i class="${i<n&&i<9?"f":""} ${i==9?"g":""}">${i==9?"🎁":i<n?"♥":i+1}</i>`).join("");$q("#sl").textContent=n>=9?"¡Tu próxima bebida es gratis!":n+" de 9 sellos · la bebida 10 es gratis";$q("#perk").innerHTML=n>=9?'<div class="perk">🎁 Tu próxima bebida es la número 10 y va por la casa. Muestra tu QR al pagar y tu tarjeta vuelve a empezar desde 0.</div>':'<div class="mini">Te faltan '+(9-n)+' para tu bebida gratis.</div>'}
-function paintAcc(){const on=!!cli;$q(".acc").classList.toggle("on",on);$q(".acc .dot").textContent=on?cli.name[0].toUpperCase():"+";$q("#acct").textContent=on?cli.name.split(" ")[0]+((cli.n||0)>=9?" · 🎁 gratis":" · "+(cli.n||0)+"/10"):"Mi cuenta";
+function paintAcc(){setTimeout(cjPaint,0);const on=!!cli;$q(".acc").classList.toggle("on",on);$q(".acc .dot").textContent=on?cli.name[0].toUpperCase():"+";$q("#acct").textContent=on?cli.name.split(" ")[0]+((cli.n||0)>=9||(cli.pend||0)>0?" · 🎁 gratis":" · "+(cli.n||0)+"/10"):"Mi cuenta";
  $q("#a1").hidden=on;$q("#a2").hidden=!on;
  if(!on){$q("#ag").hidden=!!(me&&!me.isAnonymous);if(me&&!$q("#an").value)$q("#an").value=me.displayName||""}
  if(on){$q("#hi").textContent="Hola, "+cli.name;const code=cli.code||"";$q("#qsm").innerHTML=aneaQRsvg(code,170);$q("#qc2").textContent=code;sg(cli.n||0);$q("#ax").hidden=false}}
 const TEL="aneaTel";let tel0=null;try{tel0=localStorage.getItem(TEL)}catch(e){}
-function subCard(d){if(unsubC)unsubC();unsubC=onSnapshot(doc(db,"clientes",d),s=>{cli=s.exists()?s.data():null;window.aneaUid=cli?d:null;paintAcc();if(cli&&window.__reopen)$q("#adlg").close()},()=>{})}
+function cjPaint(){const b=$q("#cjb");if(!b)return;const pd=cli?(cli.pend||0):0,ok=!!cli&&((cli.n||0)>=9||pd>0);
+ if(!ok){window.__canje=false;cart.forEach(x=>{if(x.canje)x.canje=0});applyOff();b.hidden=true;const g=$q("#cjgo");if(g)g.hidden=true;return}
+ const has=cart.find(x=>x.canje);b.hidden=false;b.innerHTML="";
+ const t=document.createElement("div");
+ if(has){t.innerHTML="🎁 <b>Tu bebida gratis:</b> "+has.name;const c=document.createElement("button");c.type="button";c.className="link";c.textContent="Quitar / cambiar";c.onclick=()=>{cart=cart.filter(x=>!x.canje);upd();window.__canje=true;applyOff();cjPaint()};b.append(t,c)}
+ else if(window.__canje){t.innerHTML="🎁 <b>Elige tu bebida gratis</b><br>Toca <b>Elegir</b> en la que quieras. Todas se pueden, menos Strawberry matcha.";const c=document.createElement("button");c.type="button";c.className="link";c.textContent="Cancelar";c.onclick=()=>{window.__canje=false;applyOff();cjPaint()};b.append(t,c)}
+ else{t.innerHTML=(cli.n||0)>=9?"🎁 <b>¡Tienes una bebida gratis!</b>":"🎁 <b>Tienes "+pd+(pd===1?" bebida gratis guardada":" bebidas gratis guardadas")+"</b>";const c=document.createElement("button");c.type="button";c.className="go";c.textContent="Canjear mi bebida gratis";c.onclick=()=>{window.__canje=true;applyOff();cjPaint();b.scrollIntoView({behavior:"smooth",block:"center"})};b.append(t,c)}
+ const g=$q("#cjgo");if(g)g.hidden=false}
+window.cjPaint=cjPaint;
+function subCard(d){if(unsubC)unsubC();unsubC=onSnapshot(doc(db,"clientes",d),s=>{cli=s.exists()?s.data():null;window.aneaUid=cli?d:null;paintAcc();cjPaint();if(cli&&window.__reopen)$q("#adlg").close()},()=>{})}
 onAuthStateChanged(auth,u=>{me=u;cli=null;window.aneaUid=null;if(unsubC)unsubC();unsubC=null;paintAcc();if(!u)return;if(tel0)subCard(tel0)});
-$q("#accb").onclick=()=>{paintAcc();$q("#adlg").showModal()};$q("#ac").onclick=$q("#ac2").onclick=()=>$q("#adlg").close();
+$q("#accb").onclick=()=>{paintAcc();$q("#adlg").showModal()};
+/* enlace del NFC: anea…com/?tarjeta abre directo el registro */
+try{if(/[?&]tarjeta(=|&|$)/.test(location.search)||location.hash==="#tarjeta"){setTimeout(()=>{paintAcc();if(!$q("#adlg").open)$q("#adlg").showModal();try{history.replaceState(null,"",location.pathname)}catch(e){}},500)}}catch(e){}$q("#ac").onclick=$q("#ac2").onclick=()=>$q("#adlg").close();
 const aerr=m=>$q("#aerr").textContent=m||"";
 $q("#ag").onclick=async()=>{aerr();try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){try{await signInWithRedirect(auth,new GoogleAuthProvider())}catch(x){aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}}else if(!e||e.code!=="auth/popup-closed-by-user")aerr("No se pudo entrar con Google. Usa tu nombre y teléfono.")}};
 $q("#al").onclick=async()=>{const d=$q("#ap").value.replace(/\D/g,"").slice(-10);let name=$q("#an").value.trim();aerr();
@@ -377,6 +393,7 @@ autoName("#phone","#name",$q("#phone"),"pname");
 /* al abrir el pedido: datos de la cuenta */
 $q("#open").addEventListener("click",()=>setTimeout(()=>{let d=$q("#acctn");if(!d){d=document.createElement("div");d.id="acctn";d.className="mini";$q("#name").before(d)}
  if(cli){$q("#name").value=cli.name;$q("#phone").value=fmtPh(cli.phone||"");d.textContent="✓ Tus datos vienen de tu cuenta. Ganas sellos con este pedido."}else{d.innerHTML=""}},50));
+$q("#cjgo").onclick=()=>{window.__canje=true;$q("#adlg").close();applyOff();cjPaint();$q("#cjb").scrollIntoView({behavior:"smooth",block:"center"})};
 $q("#axx").onclick=()=>$q("#adlg").close();
 window.__gate=()=>{let no=false;try{no=sessionStorage.getItem("aneaNo")==="1"}catch(e){}if(cli||no)return false;window.__reopen=true;paintAcc();$q("#adlg").showModal();return true};
 $q("#adlg").addEventListener("close",()=>{if(window.__reopen){window.__reopen=false;try{sessionStorage.setItem("aneaNo","1")}catch(e){}setTimeout(()=>$q("#open").click(),250)}});
