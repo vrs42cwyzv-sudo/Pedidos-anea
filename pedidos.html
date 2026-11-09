@@ -108,7 +108,8 @@ function segCards(L,arr,oldestFirst,suf){
   ks.forEach(d=>{if(multi){const h=document.createElement("h2");h.className="dayh";h.textContent=`${dayLabel(d)} · ${g[d].length} ${g[d].length===1?"pedido":"pedidos"}${suf||""}`;L.append(h)}g[d].forEach(o=>L.append(card(o)))});
 }
 const typing=()=>document.activeElement&&document.activeElement.tagName==="INPUT";
-const setOffKey=(k,v)=>setDoc(doc(db,"config","agotados"),{off:v?arrayUnion(k):arrayRemove(k),updatedAt:serverTimestamp()},{merge:true}).catch(()=>alert("No se pudo guardar. Revisa tu internet e intenta de nuevo."));
+const errTxt=e=>{const c=(e&&e.code)||"";return c==="permission-denied"?"Firebase no dejó guardar (permiso / reglas). Código: permission-denied":c==="resource-exhausted"?"Se acabó el límite gratis de Firebase por hoy. Código: resource-exhausted":c==="unavailable"?"Sin internet o Firebase no responde. Código: unavailable":"Error: "+(c||(e&&e.message)||"desconocido")};
+const setOffKey=(k,v)=>setDoc(doc(db,"config","agotados"),{off:v?arrayUnion(k):arrayRemove(k),updatedAt:serverTimestamp()},{merge:true}).catch(e=>alert("No se pudo guardar. "+errTxt(e)));
 const mx=m=>new Date(m-216e5).toISOString().slice(0,10),today=()=>mx(Date.now());
 const ms=o=>o.createdAt&&o.createdAt.toMillis?o.createdAt.toMillis():Date.now();
 const dayOf=o=>o.day||mx(ms(o));
@@ -418,7 +419,7 @@ function openSale(){delete giftPick.tienda;
           b.set(doc(collection(db,"sellos")),{cid:card.id,name:card.name,day:today(),t:serverTimestamp(),who:whoIs(),add:pl.add,dr:d,g:pl.gift,k:"venta"});
           try{await b.commit()}catch(e){await saleSave({...base,name:card.name,tarjeta:card.id,items:items0,total:gross});alert("Venta registrada, pero NO se pudieron sumar los sellos ni la bebida gratis. Cóbrala completa y avisa al patrón.")}}}
       tcart=[];delete giftPick.tienda;$("#tienda").close()}
-    catch(e){alert("No se pudo guardar la venta. Revisa tu internet e intenta de nuevo.")}
+    catch(e){alert("No se pudo guardar la venta. "+errTxt(e))}
     reg.disabled=false};
   cx.onclick=()=>$("#tienda").close();
   b.append(h,sc[0],bx,pv,ql,add,list,ly,nm,reg,cx);draw();paint();$("#tienda").addEventListener("close",()=>{if(scn)scn.stop()},{once:true});
@@ -447,7 +448,7 @@ function renderCorte(L,list,cash){
   const inp=document.createElement("input");inp.type="number";inp.inputMode="decimal";inp.min="0";inp.placeholder="¿Cuánto había en caja al empezar el turno?";inp.value=cajaFondo==null?"":cajaFondo;
   const sv=document.createElement("button");sv.textContent=cajaFondo==null?"Guardar":"Actualizar";
   sv.onclick=async()=>{const v=parseFloat(inp.value);if(isNaN(v)||v<0){alert("Escribe cuánto dinero había en caja al empezar el turno.");return}
-    sv.disabled=true;try{await setDoc(doc(db,"caja",today()),{fondo:v,updatedAt:serverTimestamp()},{merge:true})}catch(e){alert("No se pudo guardar. Revisa tu internet e intenta de nuevo.")}sv.disabled=false};
+    sv.disabled=true;try{await setDoc(doc(db,"caja",today()),{fondo:v,updatedAt:serverTimestamp()},{merge:true})}catch(e){alert("No se pudo guardar. "+errTxt(e))}sv.disabled=false};
   fr.append(inp,sv);cj.append(fr);
   if(cajaFondo!=null){cj.append(row("Había al empezar",money(cajaFondo)),row("+ Vendido y entregado",money(dn)),row("Debe haber en caja",money(cajaFondo+dn)));
     lines.push(`Caja al empezar: ${money(cajaFondo)}`,`Vendido y entregado: ${money(dn)}`,`Debe haber en caja: ${money(cajaFondo+dn)}`)}
@@ -560,7 +561,7 @@ function renderClienta(L,c){const n=c.n||0;if(kT==null)kT=n;const p=box(c.name);
   for(let i=1;i<=10;i++){let el;if(i===10){el=document.createElement("span");el.className="g";el.textContent="🎁"}else{el=document.createElement("button");el.type="button";let cl="",t=i;if(i<=n&&i<=kT){cl="f";t="♥"}else if(i>n&&i<=kT){cl="nw";t="+"}else if(i<=n&&i>kT){cl="rm";t="✕"}el.className=cl;el.textContent=t;el.onclick=()=>{kT=(i===kT)?i-1:i;render()}}pk.append(el)}
   const msg=document.createElement("div");msg.style.cssText="margin:4px 0 8px;font-weight:700";const dd=kT-n;msg.textContent=dd>0?`Se suman ${dd} · quedará en ${kT} de 10`:dd<0?`Se quitan ${-dd} · quedará en ${kT} de 10`:"Sin cambios";
   const sv=document.createElement("button");sv.className="go";sv.textContent="Guardar cambio de sellos";sv.disabled=dd===0;
-  sv.onclick=async()=>{sv.disabled=true;try{const b=writeBatch(db);b.update(doc(db,"clientes",c.id),{n:kT,last:serverTimestamp()});b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:"Patrón",add:dd,dr:0,g:0,k:"ajuste"});await b.commit();kT=null}catch(e){alert("No se pudo guardar. Revisa tu internet e intenta de nuevo.");sv.disabled=false}};
+  sv.onclick=async()=>{sv.disabled=true;try{const b=writeBatch(db);b.update(doc(db,"clientes",c.id),{n:kT,last:serverTimestamp()});b.set(doc(collection(db,"sellos")),{cid:c.id,name:c.name,day:today(),t:serverTimestamp(),who:"Patrón",add:dd,dr:0,g:0,k:"ajuste"});await b.commit();kT=null}catch(e){alert("No se pudo guardar. "+errTxt(e));sv.disabled=false}};
   ed.append(pk,msg,sv);p.append(ed);L.append(p);
   const dl=document.createElement("button");dl.className="csv";dl.style.marginTop="14px";dl.textContent="Eliminar esta tarjeta (duplicada o de prueba)";dl.onclick=async()=>{if(!confirm("¿Eliminar la tarjeta de "+c.name+"? No se puede deshacer."))return;try{await deleteDoc(doc(db,"clientes",c.id));kSel=null;kT=null;render()}catch(e){alert("No se pudo eliminar la tarjeta.")}};L.append(dl);
   const h=document.createElement("p");h.style.cssText="margin:12px 0 6px;font-weight:700";h.textContent="Historial por día";L.append(h);
