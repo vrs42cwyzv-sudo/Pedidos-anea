@@ -236,6 +236,7 @@ function renderTable(L,list){
   const tot=list.reduce((s,o)=>s+(o.total||0),0),f=document.createElement("tr");f.className="tot";
   const ct=sumCups(list);f.append(td("Total"),td(list.length,"n"),td(money(tot),"n"),td(ct[0],"n"),td(ct[1],"n"));t.append(f);w.append(t);
 }
+const SAB=["Natural","Frutos rojos","Taro"];const sabOff=(v,o)=>SAB.some(f=>v.includes(f)&&o.has("s|"+f));
 const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Lotus","Vainilla"];
 const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
@@ -264,7 +265,7 @@ const CARTA_BASE=[
  {n:"Matcha clásico",z:[["16 oz",65],["Lata",75]],f:1},
  {n:"Matcha coco",d:"Con cloud foam de coco",z:M2},
  {n:"Matcha Dubai",d:"Con cloud foam de pistache",z:M2}]},
-{c:"Helado suave",i:[{n:"Helado suave",d:"Natural, frutos rojos o combinado",v:["Natural","Frutos rojos","Combinado"],z:FS,zl:"Toppings",tp:TP,x:1}]},
+{c:"Helado suave",i:[{n:"Helado suave",d:"Natural, frutos rojos, taro o combinado de 2 sabores",v:["Natural","Frutos rojos","Taro","Combinado natural + frutos rojos","Combinado natural + taro","Combinado frutos rojos + taro"],z:FS,zl:"Toppings",tp:TP,x:1}]},
 {c:"Snacks",i:[{n:"Deli delicia",p:35,x:1}]},
 {c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:30,x:1}]}
 ];
@@ -381,7 +382,7 @@ function openSale(){delete giftPick.tienda;
     if(x._other){const l1=document.createElement("label");l1.className="f";l1.textContent="Nombre del producto";const n1=document.createElement("input");n1.maxLength=40;n1.placeholder="Ej. Café de olla";l1.append(n1);const l2=document.createElement("label");l2.className="f";l2.textContent="Precio ($)";const n2=document.createElement("input");n2.type="number";n2.inputMode="decimal";n2.min="1";n2.placeholder="Ej. 45";n2.oninput=upd;l2.append(n2);S.nm=n1;S.pr=n2;bx.append(l1,l2);const l3=document.createElement("label");l3.className="f";l3.textContent="¿Cuenta como bebida para los sellos?";const n3=document.createElement("select");[["0","No (es otro producto)"],["1","Sí, es una bebida"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;n3.append(o)});l3.append(n3);S.b=n3;bx.append(l3);const sv=document.createElement("p");sv.className="nt";sv.textContent="Al agregarlo, queda guardado en la lista con su precio para la próxima vez.";bx.append(sv);upd();return}
     if(x._o&&owner){const rm=document.createElement("button");rm.type="button";rm.className="csv";rm.textContent="Quitar este producto de la lista";rm.onclick=async()=>{if(!confirm("¿Quitar «"+x.n+"» de la lista de productos?"))return;try{await saveOtros(otros.filter(o=>o.n!==x.n));otros=otros.filter(o=>o.n!==x.n);refill(-1)}catch(e){alert("No se pudo quitar. Revisa tu internet.")}};bx.dataset.rm="1";setTimeout(()=>bx.append(rm))}
     const ad=(k,t,o)=>{const [l,s]=sel(t,o,upd);S[k]=s;bx.append(l)};
-    if(x.v)ad("v","Sabor",x.v.map(v=>[v,v]));
+    if(x.v){ad("v","Sabor",x.v.map(v=>{const o=x.n==="Helado suave"&&sabOff(v,off);return [v,v+(o?" · agotado":""),o]}));const fe=[...S.v.options].find(o=>!o.disabled);if(fe)S.v.value=fe.value}
     if(x.z)ad("z",x.zl||"Tamaño",x.z.map(([t,p])=>[t,`${t} · ${money(p)}`]));
     if(x.f)ad("f",x.fi?"Cloud foam (incluido, cambio sin costo)":"Cloud foam",x.fi?[[x.fi,x.fi+" · incluido"+(off.has("f|"+x.fi)?" · agotado":""),off.has("f|"+x.fi)],...FO.filter(f=>f!==x.fi).map(f=>[f,"Cambiar a "+f+(off.has("f|"+f)?" · agotado":""),off.has("f|"+f)])]:[["","Sin cloud foam"],...FO.map(f=>[f,f+" +$10"+(off.has("f|"+f)?" · agotado":""),off.has("f|"+f)])]);
     if(!x.x)ad("l","Leche",[["Entera","Entera"],["Deslactosada","Deslactosada"]]);
@@ -493,6 +494,7 @@ function renderMenu(L){
   const mk=(title,rows)=>{const p=box(title);rows.forEach(([k,label])=>{const o=off.has(k),r=row(label,""),b=document.createElement("button");b.className="sw"+(o?" off":"");b.textContent=o?"Agotado":"Disponible";b.onclick=()=>{b.disabled=true;setOffKey(k,!o).finally(()=>{b.disabled=false})};r.lastChild.replaceWith(b);p.append(r)});L.append(p)};
   CARTA.forEach(g=>mk(g.c,g.i.map(x=>[g.c+"|"+x.n,x.n+(x.h?" (caliente)":"")])));
   mk("Cloud foam (sabores)",FO.map(f=>["f|"+f,f]));
+  mk("Helado suave (sabores)",SAB.map(x=>["s|"+x,x]));
   mk("Toppings del helado",TP.map(x=>["t|"+x,x]));
 }
 function renderTienda(L,list,all){

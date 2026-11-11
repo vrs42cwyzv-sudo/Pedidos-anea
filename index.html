@@ -125,6 +125,7 @@ a.go[hidden]{display:none}
 <script>
 const $=s=>document.querySelector(s),money=n=>"$"+n,WA="523412082668",B=70,FOAM=10,CAN=5,ENVIO=40,envio=()=>val("e")==="CBTis"?0:ENVIO;
 const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Lotus","Vainilla"];
+const SAB=["Natural","Frutos rojos","Taro"];const sabOff=(v,o)=>SAB.some(f=>String(v).toLowerCase().includes(f.toLowerCase())&&o.has("s|"+f));
 const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
@@ -152,7 +153,7 @@ const MENU_BASE=[
  {n:"Matcha clásico",z:[["16 oz",65],["Lata",75]],f:1},
  {n:"Matcha coco",d:"Con cloud foam de coco",z:M2},
  {n:"Matcha Dubai",d:"Con cloud foam de pistache",z:M2}]},
-{c:"Helado suave",i:[{n:"Helado suave",d:"Natural, frutos rojos o combinado",v:["Natural","Frutos rojos","Combinado"],z:FS,zl:"Toppings",tp:TP,x:1}]},
+{c:"Helado suave",i:[{n:"Helado suave",d:"Natural, frutos rojos, taro o combinado de 2 sabores",v:["Natural","Frutos rojos","Taro","Combinado natural + frutos rojos","Combinado natural + taro","Combinado frutos rojos + taro"],z:FS,zl:"Toppings",tp:TP,x:1}]},
 {c:"Snacks",i:[{n:"Deli delicia",p:35,x:1}]},
 {c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:30,x:1}]}
 ];
@@ -191,7 +192,7 @@ buildMenu();
 
 function openCfg(it,key){
   cur=it;curKey=key||"";let h=`<h3>${esc(it.n)}${it.h?" caliente":""}</h3>`;
-  if(it.v)h+=grp("Sabor","v",it.v.map(v=>[v,v,0]));
+  if(it.v)h+=grp("Sabor","v",it.v.map(v=>[v,v,0,it.n==="Helado suave"&&sabOff(v,OFF)]));
   if(it.z)h+=grp(it.zl||"Tamaño","z",it.z.map(([l,p])=>[l,`${l} · ${money(p)}`,0]));
   if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0,isOff("f|"+it.fi)],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0,isOff("f|"+f)])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10,isOff("f|"+f)])]);
   if(!it.x)h+=grp("Leche","l",[["Entera","Entera",0],["Deslactosada","Deslactosada",0]]);
@@ -252,7 +253,7 @@ $("#send").onclick=async()=>{
   if(!name){err("Escribe tu nombre para poder llamarte cuando esté listo.");$("#name").focus();return}
   if(ph.replace(/\D/g,"").length<10){err("Escribe tu teléfono a 10 dígitos para poder contactarte.");$("#phone").focus();return}
   if(e==="Otros"&&!ad){err("Escribe la dirección de tu casa.");$("#addr").focus();return}
-  const gone=[...new Set(cart.filter(x=>x.pk&&isOff(x.pk)).map(x=>x.name))];
+  const gone=[...new Set(cart.filter(x=>(x.pk&&isOff(x.pk))||(/^Helado suave/.test(x.name)&&sabOff(x.name.replace(/^Helado suave/,""),OFF))).map(x=>x.name))];
   if(gone.length){err("Se agotó: "+gone.join(", ")+". Quítalo de tu pedido para poder continuar.");return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
