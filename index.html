@@ -128,7 +128,7 @@ const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Lotus","Vainilla"];
 const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
 const F=[["16 oz",70],["Lata",80]],M2=[["16 oz",75],["Lata",85]],C=[["12 oz",55],["16 oz",65]];
-const MENU=[
+const MENU_BASE=[
 {c:"Nuevo",o:1,r:1,i:[
  {n:"Strawberry matcha Anea",d:"Fresa natural · matcha ceremonial · miel de agave",z:[["16 oz",110],["Lata",120]],r:1}]},
 {c:"De temporada",o:1,i:[
@@ -156,32 +156,41 @@ const MENU=[
 {c:"Snacks",i:[{n:"Deli delicia",p:35,x:1}]},
 {c:"Postres",i:[{n:"Rol de canela",p:45,x:1},{n:"Brownie",p:35,x:1},{n:"Galleta",p:35,x:1},{n:"Pan de muerto",p:30,x:1}]}
 ];
-MENU.forEach(g=>g.i.forEach(it=>{const m=Math.min(...(it.z?it.z.map(z=>z[1]):[it.p]));it.d=(it.d?it.d+" · ":"")+(it.z?"desde ":"")+money(m)}));
+const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const prep=a=>{const m=JSON.parse(JSON.stringify(a));m.forEach(g=>{g.i=g.i.filter(it=>!it.hid);g.i.forEach(it=>{const mn=Math.min(...(it.z?it.z.map(z=>z[1]):[it.p]));it.d=(it.d?it.d+" · ":"")+(it.z?"desde ":"")+money(mn)})});return m.filter(g=>g.i.length)};
+let MENU=prep(MENU_BASE);const PROD={};
+try{const c=localStorage.getItem("aneaMenu");if(c)MENU=prep(JSON.parse(c))}catch(e){}
 let cart=[],cur=null,curKey="";const ROWS=[];let OFF=new Set();
 const isOff=k=>OFF.has(k);window.isOff=isOff;
-const cjOk=k=>{const g=k.split("|")[0],n=k.slice(k.indexOf("|")+1);return g!=="Snacks"&&g!=="Postres"&&!/^Strawberry matcha/i.test(n)};
+const cjOk=k=>{const g=k.split("|")[0],n=k.slice(k.indexOf("|")+1),it=PROD[k]||{},dr=it.b!=null?!!it.b:(g!=="Snacks"&&g!=="Postres"),nc=it.nc!=null?!!it.nc:/^Strawberry matcha/i.test(n);return dr&&!nc};
 function applyOff(){ROWS.forEach(({k,r})=>{const o=isOff(k),nc=!!window.__canje&&!cjOk(k),b=r.querySelector("button");r.classList.toggle("off",o||nc);b.disabled=o||nc;b.textContent=o?"Agotado":nc?"No canjeable":"Elegir"})}
 window.setOff=l=>{OFF=new Set(l||[]);applyOff()};
-const grp=(t,k,o)=>{const first=o.findIndex(x=>!x[3]);return `<fieldset><legend>${t}</legend>${o.map(([v,l,p,off],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i===first?" checked":""}${off?" disabled":""}><span>${l}${off?" · agotado":p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`};
+const grp=(t,k,o)=>{const first=o.findIndex(x=>!x[3]);return `<fieldset><legend>${t}</legend>${o.map(([v,l,p,off],i)=>`<label class="chip"><input type="radio" name="${k}" value="${v}"${i===first?" checked":""}${off?" disabled":""}><span>${esc(l)}${off?" · agotado":p?` +${money(p)}`:""}</span></label>`).join("")}</fieldset>`};
 const val=k=>{const e=$(`input[name=${k}]:checked`);return e?e.value:""};
 const price=()=>(cur.z?cur.z.find(x=>x[0]===val("z"))[1]:cur.p)+(val("f")&&!cur.fi?10:0)+(val("s")?10:0)+(val("pm")?30:0);
+const fl=it=>({...(it.b!=null?{b:it.b?1:0}:{}),...(it.nc!=null?{nc:it.nc?1:0}:{})});
 const cjDisc=()=>cart.reduce((s,x)=>s+(x.canje?x.p:0),0),total=()=>cart.reduce((s,x)=>s+(x.canje?0:x.p*x.q),0),units=()=>cart.reduce((s,x)=>s+x.q,0);
 
+function buildMenu(){
+$("#menu").innerHTML="";ROWS.length=0;Object.keys(PROD).forEach(k=>delete PROD[k]);
 $("#menu").insertAdjacentHTML("beforeend",'<p class="stleg"><span class="st">★</span> = esta bebida suma un sello (la bebida 10 es gratis)</p><div class="cjb" id="cjb" hidden></div>');
 MENU.forEach(g=>{
-  $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm'+(g.r?' rd':'')+'"':""}>${g.c}</h2>`);
+  $("#menu").insertAdjacentHTML("beforeend",`<h2${g.o?' class="tm'+(g.r?' rd':'')+'"':""}>${esc(g.c)}</h2>`);
   g.i.forEach(it=>{
     const r=document.createElement("div");r.className="item"+(it.t?" tmp":"")+(it.r?" rdx":"");
-    const dr=!(g.c==="Snacks"||g.c==="Postres");
-    r.innerHTML=`<div class="t"><b>${it.n}${it.h?"":""}${dr?' <span class="st" title="Suma un sello">★</span>':""}</b><small>${it.d||""}</small></div><button class="pk" aria-label="Elegir ${it.n}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
-    const key=g.c+"|"+it.n;ROWS.push({k:key,r});
+    const dr=it.b!=null?!!it.b:!(g.c==="Snacks"||g.c==="Postres");
+    r.innerHTML=`<div class="t"><b>${esc(it.n)}${dr?' <span class="st" title="Suma un sello">★</span>':""}</b><small>${esc(it.d||"")}</small></div><button class="pk" aria-label="Elegir ${esc(it.n)}${g.c==="Calientes"?" caliente":""}">Elegir</button>`;
+    const key=g.c+"|"+it.n;ROWS.push({k:key,r});PROD[key]=it;
     r.querySelector("button").onclick=()=>openCfg(it,key);
     $("#menu").append(r);
   });
 });
+applyOff();if(window.cjPaint)window.cjPaint()}
+window.setMenu=a=>{MENU=prep(a);buildMenu()};window.baseMenu=()=>MENU_BASE;
+buildMenu();
 
 function openCfg(it,key){
-  cur=it;curKey=key||"";let h=`<h3>${it.n}${it.h?" caliente":""}</h3>`;
+  cur=it;curKey=key||"";let h=`<h3>${esc(it.n)}${it.h?" caliente":""}</h3>`;
   if(it.v)h+=grp("Sabor","v",it.v.map(v=>[v,v,0]));
   if(it.z)h+=grp(it.zl||"Tamaño","z",it.z.map(([l,p])=>[l,`${l} · ${money(p)}`,0]));
   if(it.f)h+=it.fi?grp("Cloud foam (incluido, puedes cambiarlo sin costo)","f",[[it.fi,it.fi+" · incluido",0,isOff("f|"+it.fi)],...FO.filter(f=>f!==it.fi).map(f=>[f,"Cambiar a "+f,0,isOff("f|"+f)])]):grp("Cloud foam","f",[["","Sin cloud foam",0],...FO.map(f=>[f,f,10,isOff("f|"+f)])]);
@@ -209,9 +218,9 @@ function addItem(){
   const parts=[val("z"),tp.length&&"toppings: "+tp.join(", "),val("f")&&`cloud foam de ${val("f")}`,val("s")&&"shot de espresso",val("pm")&&"con pan de muerto",val("l")&&`leche ${val("l").toLowerCase()}`].filter(Boolean);
   const name=cur.n+(cur.h?" caliente":"")+(val("v")?` ${val("v")}`:"");
   const key=name+"|"+parts.join(",");
-  if(window.__canje){cart=cart.filter(x=>!x.canje);cart.push({key:"canje|"+key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1,canje:1});window.__canje=false;applyOff();upd();return}
+  if(window.__canje){cart=cart.filter(x=>!x.canje);cart.push({key:"canje|"+key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1,canje:1,...fl(cur)});window.__canje=false;applyOff();upd();return}
   const ex=cart.find(x=>x.key===key);
-  if(ex)ex.q++;else cart.push({key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1});
+  if(ex)ex.q++;else cart.push({key,pk:curKey,name,opt:parts.join(", "),p:price(),q:1,...fl(cur)});
   upd();
 }
 function upd(){
@@ -247,7 +256,7 @@ $("#send").onclick=async()=>{
   if(gone.length){err("Se agotó: "+gone.join(", ")+". Quítalo de tu pedido para poder continuar.");return}
   const dest=e==="Otros"?ad:e,btn=$("#send");
   err("");btn.disabled=true;btn.textContent="Enviando…";
-  const order={name,phone:ph,...(window.aneaUid?{tarjeta:window.aneaUid}:{}),day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+cjDisc()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p,...(x.canje?{canje:1}:{})})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
+  const order={name,phone:ph,...(window.aneaUid?{tarjeta:window.aneaUid}:{}),day:new Date(Date.now()-216e5).toISOString().slice(0,10),dest,note,total:total()+cjDisc()+envio(),items:[...cart.map(x=>({name:x.name,opt:x.opt,q:x.q,p:x.p,...(x.canje?{canje:1}:{}),...(x.b!=null?{b:x.b}:{}),...(x.nc!=null?{nc:x.nc}:{})})),...(envio()?[{name:"Costo de envío",opt:"",q:1,p:envio()}]:[])]};
   let t=`Hola, soy ${name}. Quiero pedir:\n`;
   cart.forEach(x=>t+=`- ${x.q} × ${x.name}${x.opt?` (${x.opt})`:""}: ${x.canje?"🎁 GRATIS (canje)":money(x.p*x.q)}\n`);
   t+=(envio()?`Costo de envío: ${money(envio())}\n`:"")+`Total: ${money(total()+envio())}\nEntrega: ${dest}\nTeléfono: ${ph}`;
@@ -282,7 +291,7 @@ $("#new").onclick=()=>{cart=[];upd();$("#note").value="";$("#dlg").close();windo
 </div></dialog>
 <script>
 function aneaQR(text){
- const S=25,D=28,E=16,bytes=[...new TextEncoder().encode(text)];if(bytes.length>26)throw Error("largo");
+ const S=33,D=80,E=20,bytes=[...new TextEncoder().encode(text)];if(bytes.length>78)throw Error("largo");
  let bits=[];const put=(v,n)=>{for(let i=n-1;i>=0;i--)bits.push((v>>>i)&1)};
  put(4,4);put(bytes.length,8);bytes.forEach(b=>put(b,8));put(0,Math.min(4,D*8-bits.length));while(bits.length%8)bits.push(0);
  const cw=[];for(let i=0;i<bits.length;i+=8)cw.push(parseInt(bits.slice(i,i+8).join(""),2));
@@ -297,15 +306,16 @@ function aneaQR(text){
  for(let i=0;i<S;i++){sf(6,i,i%2==0);sf(i,6,i%2==0)}
  const fd=(cx,cy)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),x=cx+dx,y=cy+dy;if(x>=0&&x<S&&y>=0&&y<S)sf(x,y,d!=2&&d!=4)}};
  fd(3,3);fd(S-4,3);fd(3,S-4);
- for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)sf(18+dx,18+dy,Math.max(Math.abs(dx),Math.abs(dy))!=1);
- const data=0;let rem=data;for(let i=0;i<10;i++)rem=(rem<<1)^((rem>>>9)*0x537);
+ for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)sf(S-7+dx,S-7+dy,Math.max(Math.abs(dx),Math.abs(dy))!=1);
+ const data=8;let rem=data;for(let i=0;i<10;i++)rem=(rem<<1)^((rem>>>9)*0x537);
  const fb=((data<<10)|rem)^0x5412,g=i=>((fb>>>i)&1)!=0;
  for(let i=0;i<=5;i++)sf(8,i,g(i));sf(8,7,g(6));sf(8,8,g(7));sf(7,8,g(8));for(let i=9;i<15;i++)sf(14-i,8,g(i));
  for(let i=0;i<8;i++)sf(S-1-i,8,g(i));for(let i=8;i<15;i++)sf(8,S-15+i,g(i));sf(8,S-8,true);
  let k=0;for(let right=S-1;right>=1;right-=2){if(right==6)right=5;for(let v=0;v<S;v++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)==0,y=up?S-1-v:v;if(!fn[y][x]&&k<all.length*8){m[y][x]=((all[k>>>3]>>>(7-(k&7)))&1)!=0;k++}}}
  for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(!fn[y][x]&&(x+y)%2==0)m[y][x]=!m[y][x];
  return m}
-function aneaQRsvg(text,px){const m=aneaQR(text),n=m.length,q=2;let r="";m.forEach((row,y)=>row.forEach((v,x)=>{if(v)r+=`<rect x="${x+q}" y="${y+q}" width="1" height="1"/>`}));return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n+2*q} ${n+2*q}" width="${px||200}" height="${px||200}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><g fill="#000">${r}</g></svg>`}
+const QRU=c=>"https://aneaheladosycafe.com/pedidos.html#anea="+c;
+function aneaQRsvg(text,px){const m=aneaQR(text),n=m.length,q=4;let r="";m.forEach((row,y)=>row.forEach((v,x)=>{if(v)r+=`<rect x="${x+q}" y="${y+q}" width="1" height="1"/>`}));return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n+2*q} ${n+2*q}" width="${px||200}" height="${px||200}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><g fill="#000">${r}</g></svg>`}
 
 </script>
 <script type="module">
@@ -313,6 +323,10 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {getAuth,onAuthStateChanged,signInWithPopup,signInWithRedirect,GoogleAuthProvider,signInAnonymously,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,addDoc,serverTimestamp,doc,onSnapshot,setDoc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyC06tHtumXz4YOimZHMMv7CLaE9bJD5Xh8",authDomain:"anea-pedidos.firebaseapp.com",projectId:"anea-pedidos",appId:"1:940121031481:web:78b3989fd086354de35ee8"},"cliente"),db=getFirestore(app),auth=getAuth(app);
+let lastMenu=null;try{lastMenu=localStorage.getItem("aneaMenu")}catch(e){}
+onSnapshot(doc(db,"config","menu"),s=>{const j=s.exists()?s.data().json:null;
+  if(j){if(j!==lastMenu){lastMenu=j;try{localStorage.setItem("aneaMenu",j)}catch(e){}try{window.setMenu(JSON.parse(j))}catch(e){}}}
+  else if(lastMenu){lastMenu=null;try{localStorage.removeItem("aneaMenu")}catch(e){}window.setMenu(window.baseMenu())}},()=>{});
 onSnapshot(doc(db,"config","agotados"),s=>window.setOff&&window.setOff(s.exists()?(s.data().off||[]):[]),()=>{});
 
 
@@ -323,7 +337,7 @@ function sg(n){$q("#sg").innerHTML=Array.from({length:10},(_,i)=>`<i class="${i<
 function paintAcc(){setTimeout(cjPaint,0);const on=!!cli;$q(".acc").classList.toggle("on",on);$q(".acc .dot").textContent=on?cli.name[0].toUpperCase():"+";$q("#acct").textContent=on?cli.name.split(" ")[0]+((cli.n||0)>=9||(cli.pend||0)>0?" · 🎁 gratis":" · "+(cli.n||0)+"/10"):"Mi cuenta";
  $q("#a1").hidden=on;$q("#a2").hidden=!on;
  if(!on){$q("#ag").hidden=!!(me&&!me.isAnonymous);if(me&&!$q("#an").value)$q("#an").value=me.displayName||""}
- if(on){$q("#hi").textContent="Hola, "+cli.name;const code=cli.code||"";$q("#qsm").innerHTML=aneaQRsvg(code,170);$q("#qc2").textContent=code;sg(cli.n||0);$q("#ax").hidden=false}}
+ if(on){$q("#hi").textContent="Hola, "+cli.name;const code=cli.code||"";$q("#qsm").innerHTML=aneaQRsvg(QRU(code),170);$q("#qc2").textContent=code;sg(cli.n||0);$q("#ax").hidden=false}}
 const TEL="aneaTel";let tel0=null;try{tel0=localStorage.getItem(TEL)}catch(e){}
 function cjPaint(){const b=$q("#cjb");if(!b)return;const pd=cli?(cli.pend||0):0,ok=!!cli&&((cli.n||0)>=9||pd>0);
  if(!ok){window.__canje=false;cart.forEach(x=>{if(x.canje)x.canje=0});applyOff();b.hidden=true;const g=$q("#cjgo");if(g)g.hidden=true;return}
@@ -355,8 +369,8 @@ $q("#al").onclick=async()=>{const d=$q("#ap").value.replace(/\D/g,"").slice(-10)
  catch(e){aerr("No se pudo entrar a tu tarjeta. Revisa tu internet e intenta de nuevo.")}
  b.disabled=false;b.textContent="Entrar a mi tarjeta"};
 $q("#ax").onclick=async()=>{tel0=null;try{localStorage.removeItem(TEL)}catch(e){}await signOut(auth);$q("#adlg").close()};
-$q("#qf").onclick=()=>{$q("#qbig").innerHTML=aneaQRsvg(cli.code,340);$q("#qcode").textContent=cli.code;$q("#qdlg").showModal()};$q("#qx").onclick=()=>$q("#qdlg").close();
-$q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([aneaQRsvg(cli.code,600)],{type:"image/svg+xml"}));a.download="mi-tarjeta-anea.svg";a.click()};
+$q("#qf").onclick=()=>{$q("#qbig").innerHTML=aneaQRsvg(QRU(cli.code),340);$q("#qcode").textContent=cli.code;$q("#qdlg").showModal()};$q("#qx").onclick=()=>$q("#qdlg").close();
+$q("#qd").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([aneaQRsvg(QRU(cli.code),600)],{type:"image/svg+xml"}));a.download="mi-tarjeta-anea.svg";a.click()};
 
 /* agregar a pantalla de inicio */
 (()=>{const b=$q("#hm"),h=$q("#hmh");let ev=null;
