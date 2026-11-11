@@ -236,7 +236,8 @@ function renderTable(L,list){
   const tot=list.reduce((s,o)=>s+(o.total||0),0),f=document.createElement("tr");f.className="tot";
   const ct=sumCups(list);f.append(td("Total"),td(list.length,"n"),td(money(tot),"n"),td(ct[0],"n"),td(ct[1],"n"));t.append(f);w.append(t);
 }
-const SAB=["Natural","Frutos rojos","Taro"];const sabOff=(v,o)=>SAB.some(f=>v.includes(f)&&o.has("s|"+f));
+const sabOff=(v,o)=>[...o].some(k=>k.startsWith("s|")&&String(v).toLowerCase().includes(k.slice(2).toLowerCase()));
+const sabList=()=>{const h=(typeof CARTA!=="undefined"?CARTA:[]).flatMap(g=>g.i).find(x=>x.n==="Helado suave");return((h&&h.v)||["Natural","Frutos rojos","Taro"]).filter(v=>!/combinado|\+/i.test(v))};
 const FO=["Fresa","Coco","Pumpkin Spice","Matcha","Lotus","Vainilla"];
 const FS=[["Sencillo (sin toppings)",55,0],["2 toppings",65,2],["3 toppings",75,3]];
 const TP=["Nuez","Granola","Granola artesanal","Coco tostado","Coco rayado","Fresa","Durazno","Oreo","Lotus","Almendra","Compota de frutos rojos"];
@@ -494,7 +495,7 @@ function renderMenu(L){
   const mk=(title,rows)=>{const p=box(title);rows.forEach(([k,label])=>{const o=off.has(k),r=row(label,""),b=document.createElement("button");b.className="sw"+(o?" off":"");b.textContent=o?"Agotado":"Disponible";b.onclick=()=>{b.disabled=true;setOffKey(k,!o).finally(()=>{b.disabled=false})};r.lastChild.replaceWith(b);p.append(r)});L.append(p)};
   CARTA.forEach(g=>mk(g.c,g.i.map(x=>[g.c+"|"+x.n,x.n+(x.h?" (caliente)":"")])));
   mk("Cloud foam (sabores)",FO.map(f=>["f|"+f,f]));
-  mk("Helado suave (sabores)",SAB.map(x=>["s|"+x,x]));
+  mk("Helado suave (sabores)",sabList().map(x=>["s|"+x,x]));
   mk("Toppings del helado",TP.map(x=>["t|"+x,x]));
 }
 function renderTienda(L,list,all){
@@ -565,7 +566,7 @@ function renderProductos(L){
   if(!ED)ED=JSON.parse(JSON.stringify(MENU_RAW));
   const dirty=JSON.stringify(ED)!==JSON.stringify(MENU_RAW);
   const top=box("Productos y precios");
-  const nt=document.createElement("p");nt.style.cssText="margin:0 0 10px;color:var(--muted);font-size:.92rem";nt.textContent="Cambia nombres, precios, descripciones, orden y qué productos salen. Al guardar se actualiza la página de clientes y la venta de tienda. Los sabores, cloud foam y toppings de cada bebida no se cambian aquí.";top.append(nt);
+  const nt=document.createElement("p");nt.style.cssText="margin:0 0 10px;color:var(--muted);font-size:.92rem";nt.textContent="Cambia nombres, precios, descripciones, orden y qué productos salen. Al guardar se actualiza la página de clientes y la venta de tienda. Aquí también puedes cambiar los sabores. El cloud foam y los toppings no se cambian aquí.";top.append(nt);
   const bar=document.createElement("div");bar.style.cssText="display:flex;gap:8px;flex-wrap:wrap";
   const sv=mkb(dirty?"💾 Guardar cambios":"Sin cambios",saveMenu,"go");sv.style.marginTop="0";sv.disabled=!dirty;bar.append(sv);
   if(dirty)bar.append(mkb("Descartar",()=>{ED=null;EDX=null;render()},"csv"));
@@ -599,6 +600,10 @@ function prodForm(x,g){
       if(x.z.length>1)rw.append(mkb("✕",()=>{x.z.splice(k,1);render()},"csv"));w.append(rw)});
     const ab=mkb("＋ Agregar tamaño",()=>{x.z.push(["",0]);render()},"csv");ab.style.alignSelf="flex-start";w.append(ab);f.append(w)}
   else{const lk=mkb("¿Tiene varios tamaños? Toca aquí para agregarlos",()=>{x.z=[["Normal",x.p||0],["",0]];delete x.p;render()},"lk");f.append(lk)}
+  if(x.v){const w=document.createElement("div");w.style.cssText="display:flex;flex-direction:column;gap:10px";const t=document.createElement("div");t.className="pft";t.textContent="Sabores";w.append(t);
+    x.v.forEach((v,k)=>{const rw=document.createElement("div");rw.className="pfs";rw.append(mkf("Sabor",v,val=>x.v[k]=val,{max:40}));
+      if(x.v.length>1)rw.append(mkb("✕",()=>{x.v.splice(k,1);render()},"csv"));w.append(rw)});
+    const ab=mkb("＋ Agregar sabor",()=>{x.v.push("");render()},"csv");ab.style.alignSelf="flex-start";w.append(ab);f.append(w)}
   const bI=x.b!=null?!!x.b:!(g.c==="Snacks"||g.c==="Postres"),nI=x.nc!=null?!!x.nc:/^Strawberry matcha/i.test(x.n||"");
   const ot=document.createElement("div");ot.className="pft";ot.textContent="Opciones";
   const ob=document.createElement("div");ob.className="pfo";
@@ -613,7 +618,7 @@ function prodForm(x,g){
   bt.append(mkb("✓ Listo",()=>{EDX=null;render()},"csv"),mkb("🗑 Eliminar producto",()=>{if(confirm("¿Eliminar «"+(x.n||"este producto")+"»?")){g.i.splice(g.i.indexOf(x),1);EDX=null;render()}},"csv"));f.append(bt);return f}
 function checkMenu(){const seen=new Set();for(const g of ED){const gn=(g.c||"").trim();if(!gn)return"Una categoría no tiene nombre.";if(seen.has(gn))return"Hay dos categorías llamadas «"+gn+"».";seen.add(gn);const ns=new Set();for(const x of g.i){const n=(x.n||"").trim();if(!n)return"Hay un producto sin nombre en «"+gn+"».";if(ns.has(n))return"«"+n+"» está repetido en «"+gn+"».";ns.add(n);
     if(x.z){if(!x.z.length)return"«"+n+"» no tiene tamaños.";for(const z of x.z){if(!String(z[0]||"").trim())return"Falta el nombre de un tamaño en «"+n+"».";if(!(z[1]>0))return"Pon un precio mayor a 0 en «"+n+"».";}}else if(!(x.p>0))return"Pon un precio mayor a 0 en «"+n+"»."}}return""}
-async function saveMenu(){ED.forEach(g=>{g.c=g.c.trim();g.i.forEach(x=>{x.n=x.n.trim();x.d=(x.d||"").trim();if(!x.d)delete x.d})});const e=checkMenu();if(e){alert(e);render();return}
+async function saveMenu(){ED.forEach(g=>{g.c=g.c.trim();g.i.forEach(x=>{if(x.v)x.v=x.v.map(q=>String(q).trim()).filter(Boolean);x.n=x.n.trim();x.d=(x.d||"").trim();if(!x.d)delete x.d})});const e=checkMenu();if(e){alert(e);render();return}
   const j=JSON.stringify(ED);if(j.length>70000){alert("El menú es demasiado grande.");return}
   try{await setDoc(doc(db,"config","menu"),{json:j,updatedAt:serverTimestamp()});MENU_RAW=JSON.parse(j);mnLast=j;CARTA=prepC(MENU_RAW);ED=null;EDX=null;alert("Guardado ✓ La página de clientes se actualiza sola.");render()}catch(e){alert("No se pudo guardar. "+errTxt(e))}}
 function renderClientas(L){
